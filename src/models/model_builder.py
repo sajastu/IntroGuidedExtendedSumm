@@ -372,6 +372,7 @@ class SentenceEncoder(nn.Module):
         return encoded_sent
 
 
+
 class IntroSentenceCombiner(nn.Module):
     def __init__(self, n_input, n_output=1):
         super(IntroSentenceCombiner, self).__init__()
