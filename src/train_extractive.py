@@ -173,7 +173,7 @@ def validate(args, device_id, pt, step):
     return stats.total_loss()
 
 
-def test_ext(args, device_id, pt, step, is_joint=False):
+def test_ext(args, device_id, pt, step, intro_cls=False, intro_sents_cls=False, intro_top_cls=False):
     device = "cpu" if args.visible_gpus == '-1' else "cuda"
     if (pt != ''):
         test_from = pt
@@ -191,7 +191,7 @@ def test_ext(args, device_id, pt, step, is_joint=False):
         return data_loader.Dataloader(args, load_dataset(args, args.exp_set, shuffle=False), args.test_batch_size, device,
                                       shuffle=False, is_test=True)
 
-    model = ExtSummarizer(args, device, checkpoint, is_joint=is_joint)
+    model = ExtSummarizer(args, device, checkpoint, intro_cls=intro_cls)
     model.eval()
 
     # test_iter = data_loader.Dataloader(args, load_dataset(args, 'test', shuffle=False),
@@ -205,14 +205,14 @@ def test_ext(args, device_id, pt, step, is_joint=False):
     trainer.validate_rouge_baseline(test_iter_fct, step, write_scores_to_pickle=True)
     # trainer.validate_cls(test_iter_fct, step)
 
-def train_ext(args, device_id, is_joint=False):
+def train_ext(args, device_id, intro_cls=False, intro_sents_cls=False, intro_top_cls=False):
     if (args.world_size > 1):
-        train_multi_ext(args, is_joint)
+        train_multi_ext(args, intro_cls)
     else:
-        train_single_ext(args, device_id, is_joint)
+        train_single_ext(args, device_id, intro_cls)
 
 
-def train_single_ext(args, device_id, is_joint=False):
+def train_single_ext(args, device_id, intro_cls=False, intro_sents_cls=False, intro_top_cls=False):
     init_logger(args.log_file)
 
 
@@ -252,7 +252,7 @@ def train_single_ext(args, device_id, is_joint=False):
         return data_loader.Dataloader(args, load_dataset(args, 'test', shuffle=False), args.test_batch_size, device,
                                       shuffle=False, is_test=True)
 
-    model = ExtSummarizer(args, device, checkpoint, is_joint, args.rg_predictor)
+    model = ExtSummarizer(args, device, checkpoint, intro_cls, intro_sents_cls, intro_top_cls)
     optim = model_builder.build_optim(args, model, checkpoint)
 
     logger.info(model)

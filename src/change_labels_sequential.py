@@ -129,13 +129,20 @@ ds_instance_labels = collections.defaultdict(dict)
 ds_instance_labels_ids = []
 
 # with open('/home/sajad/packages/sequential_sentence_classification/pubmed_long_' + se + '.json') as F:
-with open(PREDICTED_LABELS) as F:
-    for l in F:
-        inst = json.loads(l.strip())
-        # ds_instance_labels.append(inst)
-        for i, s in enumerate(inst['sentences']):
-            ds_instance_labels[inst['segment_id']][i] = inst['labels'][i]
-        ds_instance_labels_ids.append(inst['segment_id'])
+
+if 'combined' in PREDICTED_LABELS:
+    ds_instance_labels = json.load(open(PREDICTED_LABELS))
+
+else:
+    with open(PREDICTED_LABELS) as F:
+        for l in F:
+            inst = json.loads(l.strip())
+            # ds_instance_labels.append(inst)
+            for i, s in enumerate(inst['sentences']):
+                ds_instance_labels[inst['segment_id']][str(i)] = inst['labels'][i]
+            ds_instance_labels_ids.append(inst['segment_id'])
+
+
 new_instances = []
 prev_inst_counter = 0
 
@@ -174,7 +181,8 @@ prev_inst_counter = 0
 #
 # print('{} / {} = {:4.2f} percent'.format(nonlbld, nonlbld + lbld, nonlbld / (nonlbld + lbld)))
 
-
+Fnot = open(f'papers_labels_nf_{se}.txt', mode='w')
+pr_papers = set()
 for j, f in tqdm(enumerate(glob.glob(os.path.join(PT_DIRS, se + '*.pt'))), total=len(glob.glob(os.path.join(PT_DIRS, se + '*.pt')))):
     instances = torch.load(f)
 
@@ -186,20 +194,27 @@ for j, f in tqdm(enumerate(glob.glob(os.path.join(PT_DIRS, se + '*.pt'))), total
         old_labels = instance['sent_sect_labels']
         sent_numbers = instance['sent_numbers']
         # position_in_dict = ds_instance_labels_ids.index(paper_id)
+
+        # import pdb;pdb.set_trace()
         position_in_dict = ds_instance_labels[paper_id.split('___')[0]]
         new_labels = []
         for j, s in enumerate(sentences):
             try:
-                sent_label = position_in_dict[sent_numbers[j]]
+                sent_label = position_in_dict[str(sent_numbers[j])]
                 lbld += 1
             except:
-                import pdb;pdb.set_trace()
-                sent_label = 4
-                nonlbld += 1
+                import pdb;
+
+                pdb.set_trace()
+
+                pr_papers.add(paper_id.split("___")[0])
+                break
+                # sent_label = 4
+                # nonlbld += 1
             new_labels.append(sent_label)
 
-        # new_labels_modified = replace_most_frequent(new_labels, paper_id)
-        new_instances[-1]['sent_sect_labels'] = new_labels
+        if j==len(sentences)-1:
+            new_instances[-1]['sent_sect_labels'] = new_labels
     # destination = f.replace('512-segmented-sectioned-scibert-15', '512-segmented-sectioned-scibert-15-chunked')
     destination = '/'.join(f.split('/')[:-1]) + '-seqLabelled/' + f.split('/')[-1]
     check_path_existense('/'.join(destination.split('/')[:-1]))
@@ -207,6 +222,10 @@ for j, f in tqdm(enumerate(glob.glob(os.path.join(PT_DIRS, se + '*.pt'))), total
     prev_inst_counter += len(instances)
     print('Saved file: {}'.format(destination))
     new_instances.clear()
+
+for p in pr_papers:
+    Fnot.write(p)
+    Fnot.write('\n')
 print(se + '-->')
 
 print('{} / {} = {:4.2f} percent'.format(nonlbld, nonlbld + lbld, nonlbld / (nonlbld + lbld)))

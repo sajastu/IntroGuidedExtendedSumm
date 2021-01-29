@@ -13,6 +13,7 @@ parser.add_argument("-read_from", default='')
 parser.add_argument("-dataset", default='')
 parser.add_argument("-set", default='')
 parser.add_argument("-single_json_base", default='')
+parser.add_argument("-selective", default='')
 
 args = parser.parse_args()
 
@@ -20,6 +21,7 @@ PT_DIRS = args.read_from
 dataset = args.dataset
 set = args.set
 single_json_base = args.single_json_base
+selective_set = args.selective
 
 
 def _multi_write_from_json_files(params):
@@ -67,9 +69,17 @@ elif len(single_json_base) > 0:
     for se in [set]:
         whole_papers = {}
 
-        for f in tqdm(glob.glob(args.single_json_base + '/' + set + '/*.json'),
-                      total=len(glob.glob(args.single_json_base + '/' + set + '/*.json'))):
-            files.append((f, set, dataset + '.' + se + '.jsonl'))
+        if len(selective_set) > 0:
+            papers = []
+            with open(selective_set) as F:
+                for l in F:
+                    papers.append(l.replace('.pdf', '.json').strip())
+
+        for f in tqdm(glob.glob(args.single_json_base + '/' + set + '/*.json'), total=len(glob.glob(args.single_json_base + '/' + set + '/*.json'))):
+            if len(selective_set) > 0 and f.split('/')[-1] in papers:
+                files.append((f, set, dataset + '.' + se + '.jsonl'))
+            elif len(selective_set) == 0:
+                files.append((f, set, dataset + '.' + se + '.jsonl'))
 
 
         for f in tqdm(files, total=len(files)):

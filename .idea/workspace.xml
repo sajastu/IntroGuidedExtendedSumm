@@ -1,13 +1,635 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="5f5aa255-6b0b-4152-a31e-aa948c8038a4" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/bert_to_txt.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bert_to_single_files.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/utils/remove_dup_papers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analyse/section_dist.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/calculate_oracle_from_bertfiles.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/calculate_oracle_from_bertfiles.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/change_labels_sequential.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/change_labels_sequential.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/convert_bert_data_to_sequential.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/convert_bert_data_to_sequential.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ext_test.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/ext_test.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ext_train.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/ext_train.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/data_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/data_loader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/model_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/model_builder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/reporter_ext.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/reporter_ext.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/trainer_ext.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/trainer_ext.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modify_sent_labels_bertfiles.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/modify_sent_labels_bertfiles.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/post_process_bert.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/post_process_bert.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prep.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/prep.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prepro/data_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/prepro/data_builder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/train_extractive.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/train_extractive.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/rouge_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/rouge_utils.py" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CoverageDataManager">
+    <SUITE FILE_PATH="coverage/IntroGuidedExtendedSumm$post_stats.coverage" NAME="post_stats Coverage Results" MODIFIED="1609823429940" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/prep.sh">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="307">
+              <caret line="31" lean-forward="true" selection-start-line="31" selection-end-line="31" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/models/model_builder.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="269">
+              <caret line="374" column="39" lean-forward="true" selection-start-line="374" selection-start-column="39" selection-end-line="374" selection-end-column="39" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/modify_sent_labels_bertfiles.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="409">
+              <caret line="315" selection-start-line="315" selection-end-line="315" />
+              <folding>
+                <element signature="e#0#15#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/post_process_bert.sh">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="435">
+              <caret line="29" column="58" selection-start-line="29" selection-start-column="58" selection-end-line="29" selection-end-column="95" />
+              <folding>
+                <marker date="1611722785302" expanded="true" signature="576:1106" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ext_train.sh">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="390">
+              <caret line="26" column="49" selection-start-line="26" selection-start-column="49" selection-end-line="26" selection-end-column="49" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/utils/spreadsheet.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="720">
+              <caret line="49" column="9" selection-start-line="49" selection-start-column="9" selection-end-line="49" selection-end-column="9" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/utils/rouge_utils.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="17475">
+              <caret line="1169" selection-start-line="1169" selection-end-line="1169" />
+              <folding>
+                <element signature="e#0#14#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/prepro/data_builder.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1232">
+              <caret line="920" column="12" lean-forward="true" selection-start-line="920" selection-start-column="12" selection-end-line="920" selection-end-column="12" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/bert_to_single_files.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="600">
+              <caret line="46" column="22" selection-start-line="46" selection-start-column="22" selection-end-line="46" selection-end-column="22" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>validate_r</find>
+      <find>def _mult</find>
+      <find>def _save</find>
+      <find>intro_cl</find>
+      <find>max</find>
+      <find>use_interval</find>
+      <find>2</find>
+      <find>self.intro_cls</find>
+      <find>intro_cls</find>
+      <find>validate</find>
+      <find>src_sent_rg</find>
+      <find>get_eligible_section_ids</find>
+      <find>contr</find>
+      <find>papers_src</find>
+      <find>collection</find>
+      <find>defaultdict</find>
+      <find>out_sents_rg_scores1</find>
+      <find>sent_rg_scores</find>
+      <find>sent_sect_labels</find>
+      <find>format_to_bert</find>
+      <find>4</find>
+      <find>s</find>
+      <find>np_intro</find>
+      <find>8</find>
+      <find>is_idx_in_global</find>
+      <find>validate_rouge</find>
+      <find>MAX_POS</find>
+      <find>torch.save</find>
+      <find>intro</find>
+      <find>get_eligible_parts</find>
+    </findStrings>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/src/not-intro-l1.txt" />
+        <option value="$PROJECT_DIR$/src/convert_bert_data_to_sequential.py" />
+        <option value="$PROJECT_DIR$/src/sequential_output_combiner.py" />
+        <option value="$PROJECT_DIR$/src/train_extractive.py" />
+        <option value="$PROJECT_DIR$/src/models/reporter_ext.py" />
+        <option value="$PROJECT_DIR$/src/utils/remove_dup_papers.py" />
+        <option value="$PROJECT_DIR$/src/calculate_oracle_from_bertfiles.py" />
+        <option value="$PROJECT_DIR$/src/utils/spreadsheet.py" />
+        <option value="$PROJECT_DIR$/src/train.py" />
+        <option value="$PROJECT_DIR$/src/change_labels_sequential.py" />
+        <option value="$PROJECT_DIR$/src/sect_to_single_json.py" />
+        <option value="$PROJECT_DIR$/src/models/data_loader.py" />
+        <option value="$PROJECT_DIR$/src/models/trainer_ext.py" />
+        <option value="$PROJECT_DIR$/src/ext_test.sh" />
+        <option value="$PROJECT_DIR$/src/check_intro_labels.py" />
+        <option value="$PROJECT_DIR$/src/modify_sent_labels_bertfiles.py" />
+        <option value="$PROJECT_DIR$/src/utils/rouge_utils.py" />
+        <option value="$PROJECT_DIR$/bert_to_txt.py" />
+        <option value="$PROJECT_DIR$/src/bert_to_single_files.py" />
+        <option value="$PROJECT_DIR$/src/preprocess.py" />
+        <option value="$PROJECT_DIR$/src/post_process_bert.sh" />
+        <option value="$PROJECT_DIR$/src/models/model_builder.py" />
+        <option value="$PROJECT_DIR$/src/ext_train.sh" />
+        <option value="$PROJECT_DIR$/src/prepro/data_builder.py" />
+        <option value="$PROJECT_DIR$/src/prep.sh" />
+      </list>
+    </option>
+  </component>
+  <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsGulpfileManager">
+    <detection-done>true</detection-done>
+    <sorting>DEFINITION_ORDER</sorting>
+  </component>
   <component name="ProjectFrameBounds">
     <option name="y" value="23" />
     <option name="width" value="1920" />
     <option name="height" value="1002" />
   </component>
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="IntroGuidedExtendedSumm" type="b2602c69:ProjectViewProjectNode" />
+              <item name="IntroGuidedExtendedSumm" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="IntroGuidedExtendedSumm" type="b2602c69:ProjectViewProjectNode" />
+              <item name="IntroGuidedExtendedSumm" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+    </panes>
+  </component>
   <component name="PropertiesComponent">
+    <property name="SearchEverywhereHistoryKey" value="exttr&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/ext_train.sh&#10;model&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/model_builder.py&#10;prep&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/preprocess.py&#10;modif&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/modify_sent_labels_bertfiles.py&#10;pre&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/prep.sh&#10;data&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/prepro/data_builder.py&#10;roug&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/utils/rouge_utils.py&#10;posp&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/post_process_bert.sh&#10;modifyla&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/modify_sent_labels_bertfiles.py&#10;train&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/train.py&#10;test&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/ext_test.sh&#10;trainer&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/trainer_ext.py&#10;dataloa&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/data_loader.py&#10;extr&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/ext_train.sh&#10;datab&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/prepro/data_builder.py&#10;prep.&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/prep.sh&#10;rouge&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/utils/rouge_utils.py&#10;databui&#9;null&#9;null&#10;calc&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/calculate_oracle_from_bertfiles.py&#10;exttra&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/ext_train.sh&#10;pos&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/post_process_bert.sh&#10;json&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/sect_to_single_json.py&#10;trainere&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/trainer_ext.py&#10;extt&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/ext_train.sh&#10;modify_sent_labels_bertfiles&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/modify_sent_labels_bertfiles.py&#10;DATA&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/data_loader.py&#10;utils&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/utils/rouge_utils.py&#10;post&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/post_process_bert.sh&#10;prep.s&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/prep.sh&#10;change_labels_sequential&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/change_labels_sequential.py&#10;calculate_oracle_from_bertfiles&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/calculate_oracle_from_bertfiles.py&#10;datalo&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/data_loader.py&#10;prepr&#9;null&#9;null&#10;ca&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/calculate_oracle_from_bertfiles.py&#10;databu&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/prepro/data_builder.py&#10;reporter&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/reporter_ext.py&#10;mode&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/model_builder.py&#10;convert_bert_data_to_sequential&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/convert_bert_data_to_sequential.py&#10;conver&#9;null&#9;null&#10;rougeuti&#9;null&#9;null&#10;modelbu&#9;null&#9;null" />
     <property name="WebServerToolWindowFactoryState" value="true" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="settings.editor.selected.configurable" value="web.server" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/utils" />
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration name="post_stats" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="IntroGuidedExtendedSumm" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/post_stats.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.post_stats" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="5f5aa255-6b0b-4152-a31e-aa948c8038a4" name="Default Changelist" comment="" />
+      <created>1607902935045</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1607902935045</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="0" y="23" width="1920" height="1002" extended-state="0" />
+    <editor active="true" />
+    <layout>
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49868765" visible="true" weight="0.16453674" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" sideWeight="0.5013123" side_tool="true" weight="0.1996805" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32857144" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49946752" weight="0.20989011" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="8" weight="0.32967034" />
+      <window_info anchor="bottom" id="File Transfer" order="9" visible="true" weight="0.032967035" />
+      <window_info anchor="bottom" id="Database Changes" order="10" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Terminal" order="11" sideWeight="0.49946752" weight="0.42527473" />
+      <window_info anchor="bottom" id="Event Log" order="12" sideWeight="0.5005325" side_tool="true" weight="0.32967034" />
+      <window_info anchor="bottom" id="Python Console" order="13" />
+      <window_info anchor="bottom" id="Concurrent Activities Diagram" order="14" weight="0.32967034" />
+      <window_info anchor="bottom" id="Messages" order="15" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="Remote Host" order="3" />
+      <window_info anchor="right" id="SciView" order="4" weight="0.32960597" />
+      <window_info anchor="right" id="Database" order="5" />
+      <window_info anchor="right" id="Coverage" order="6" side_tool="true" />
+      <window_info anchor="right" x="0" y="0" width="430" height="802" id="Documentation" order="7" side_tool="true" weight="0.32960597" />
+    </layout>
+    <layout-to-restore>
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49868765" visible="true" weight="0.15335463" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" sideWeight="0.5013123" side_tool="true" weight="0.1996805" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32857144" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49946752" visible="true" weight="0.20989011" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="8" weight="0.32967034" />
+      <window_info anchor="bottom" id="File Transfer" order="9" visible="true" weight="0.032967035" />
+      <window_info anchor="bottom" id="Database Changes" order="10" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Terminal" order="11" sideWeight="0.49946752" weight="0.42527473" />
+      <window_info anchor="bottom" id="Event Log" order="12" sideWeight="0.5005325" side_tool="true" weight="0.32967034" />
+      <window_info anchor="bottom" id="Python Console" order="13" />
+      <window_info anchor="bottom" id="Concurrent Activities Diagram" order="14" weight="0.32967034" />
+      <window_info anchor="bottom" id="Messages" order="15" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="Remote Host" order="3" />
+      <window_info anchor="right" id="SciView" order="4" weight="0.32960597" />
+      <window_info anchor="right" id="Database" order="5" />
+      <window_info anchor="right" id="Coverage" order="6" side_tool="true" />
+      <window_info anchor="right" x="0" y="0" width="430" height="802" id="Documentation" order="7" side_tool="true" weight="0.32960597" />
+    </layout-to-restore>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/src/utils/rouge.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/not-intro-l1.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/convert_bert_data_to_sequential.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="6" column="21" selection-start-line="6" selection-start-column="21" selection-end-line="6" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/reporter_ext.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-4671">
+          <caret line="110" column="17" selection-start-line="110" selection-start-column="17" selection-end-line="110" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/pdb.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-3" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/utils/remove_dup_papers.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="18" lean-forward="true" selection-start-column="18" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/counting.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/utils/oracle_utils.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/dl_dataset.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/etst.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2317" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/spliting_bertfiles.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="248">
+          <caret line="27" lean-forward="true" selection-start-line="27" selection-end-line="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/post_stats.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="293">
+          <caret line="56" lean-forward="true" selection-start-line="56" selection-end-line="56" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/sequential_output_combiner.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="18" column="53" selection-start-line="18" selection-start-column="53" selection-end-line="18" selection-end-column="53" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/abstractize.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="510">
+          <caret line="34" column="14" selection-start-line="34" selection-start-column="14" selection-end-line="34" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/train_extractive.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="638">
+          <caret line="255" column="30" selection-start-line="255" selection-start-column="30" selection-end-line="255" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/change_labels_sequential.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-11">
+          <caret line="111" column="38" lean-forward="true" selection-start-line="111" selection-start-column="38" selection-end-line="111" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/tester1.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/sect_to_single_json.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="16" column="21" lean-forward="true" selection-start-line="16" selection-start-column="21" selection-end-line="16" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/calculate_oracle_from_bertfiles.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="338">
+          <caret line="130" column="29" lean-forward="true" selection-start-line="130" selection-start-column="29" selection-end-line="130" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/train.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1830">
+          <caret line="128" column="38" selection-start-line="128" selection-start-column="26" selection-end-line="128" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/torch/__init__.pyi">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/data_loader.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="416">
+          <caret line="213" column="8" selection-start-line="213" selection-start-column="8" selection-end-line="213" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/trainer_ext.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="373">
+          <caret line="223" column="48" selection-start-line="223" selection-start-column="48" selection-end-line="223" selection-end-column="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ext_test.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="135">
+          <caret line="9" column="65" selection-start-line="9" selection-start-column="65" selection-end-line="9" selection-end-column="65" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/check_intro_labels.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="10" column="80" lean-forward="true" selection-start-line="10" selection-start-column="80" selection-end-line="10" selection-end-column="107" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/preprocess.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="765">
+          <caret line="79" lean-forward="true" selection-start-line="79" selection-end-line="79" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bert_to_txt.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="510">
+          <caret line="34" lean-forward="true" selection-start-line="27" selection-start-column="10" selection-end-line="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/post_process_bert.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="435">
+          <caret line="29" column="58" selection-start-line="29" selection-start-column="58" selection-end-line="29" selection-end-column="95" />
+          <folding>
+            <marker date="1611722785302" expanded="true" signature="576:1106" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/utils/spreadsheet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="720">
+          <caret line="49" column="9" selection-start-line="49" selection-start-column="9" selection-end-line="49" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/utils/rouge_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17475">
+          <caret line="1169" selection-start-line="1169" selection-end-line="1169" />
+          <folding>
+            <element signature="e#0#14#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/bert_to_single_files.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="600">
+          <caret line="46" column="22" selection-start-line="46" selection-start-column="22" selection-end-line="46" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ext_train.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="390">
+          <caret line="26" column="49" selection-start-line="26" selection-start-column="49" selection-end-line="26" selection-end-column="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/prepro/data_builder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1232">
+          <caret line="920" column="12" lean-forward="true" selection-start-line="920" selection-start-column="12" selection-end-line="920" selection-end-column="12" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/prep.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="307">
+          <caret line="31" lean-forward="true" selection-start-line="31" selection-end-line="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/modify_sent_labels_bertfiles.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="409">
+          <caret line="315" selection-start-line="315" selection-end-line="315" />
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/model_builder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="269">
+          <caret line="374" column="39" lean-forward="true" selection-start-line="374" selection-start-column="39" selection-end-line="374" selection-end-column="39" />
+        </state>
+      </provider>
+    </entry>
   </component>
 </project>

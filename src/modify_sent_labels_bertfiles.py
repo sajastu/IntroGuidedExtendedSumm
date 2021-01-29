@@ -7,7 +7,8 @@ from multiprocessing.pool import Pool
 import torch
 from tqdm import tqdm
 
-from utils.rouge_utils import greedy_selection, greedy_selection_section_based_intro_conc
+from utils.rouge_utils import greedy_selection, greedy_selection_section_based_intro_conc, \
+    greedy_selection_section_based_intro_conc_logical
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-pt_dirs_src", default='')
@@ -114,6 +115,7 @@ def modify_labels_multi_(params):
                                                                      len(new_instances_to_save), len(paper_count)))
     return len(paper_count)
 
+paper_ids = set()
 
 def modify_labels_multi_section_based(params):
     f, PT_DIRS_DEST = params
@@ -131,12 +133,13 @@ def modify_labels_multi_section_based(params):
     papers_bert_count = list()
     for inst_idx, instance in enumerate(instances):
         sentences = instance['src_txt']
-
         tgt_sents = instance['tgt_txt'].split('<q>')
-        rg_scores = instance['src_sent_labels']
+        rg_scores = instance['src_sent_rg']
         sent_sections_txt = instance['sent_sections_txt']
         sent_sect_labels = instance['sent_sect_labels']
         paper_id = instance['paper_id'].split('___')[0]
+        paper_ids.add(paper_id)
+
         papers_bert_count.append(str(inst_idx) + ' ' + str(instance['paper_id']))
         papers_src[paper_id][instance['paper_id']] = sentences
         # if instance['paper_id']=='hep-ex0111032___measurement of the @xmath and @xmath decays___0':
@@ -156,15 +159,23 @@ def modify_labels_multi_section_based(params):
     sect_percentage_seqIDS = {'0': 0, '1': 0, '2':0, '3': 0, '4': 0}
     for idx, paper_id in enumerate(papers_src):
         segment_sents = papers_src[paper_id]
+        segment_sents_section = papers_sent_sections[paper_id]
         sections_lens = {}
 
-        for seg_idx, seg_sents in segment_sents.items():
-            if seg_idx.split('___')[1] not in sections_lens.keys():
-                sections_lens[seg_idx.split('___')[1]] = len(seg_sents)
-            else:
-                sections_lens[seg_idx.split('___')[1]] += len(seg_sents)
 
-        sections_lens = list(sections_lens.values())
+        for seg_idx, seg_sents_section in segment_sents_section.items():
+            for sect in seg_sents_section:
+                if sect not in sections_lens.keys():
+                    sections_lens[sect] = 1
+                else:
+                    sections_lens[sect] +=1
+
+        # for seg_idx, seg_sents in segment_sents.items():
+        #     if seg_idx.split('___')[1] not in sections_lens.keys():
+        #         sections_lens[seg_idx.split('___')[1]] = len(seg_sents)
+        #     else:
+        #         sections_lens[seg_idx.split('___')[1]] += len(seg_sents)
+        sections_lens_vals = list(sections_lens.values())
         sections_sents_rg = papers_rgs[paper_id]
         sections_sent_sections = papers_sent_sections[paper_id]
         all_sents = []
@@ -206,15 +217,16 @@ def modify_labels_multi_section_based(params):
             #     all_sections_text,
             #     SENT_NUM)
 
-
-            top_sents_labels, _, dist_percentage, dist_sect_ID_percentage = greedy_selection_section_based_intro_conc(
+            # try:
+            top_sents_labels, _, dist_percentage, dist_sect_ID_percentage = greedy_selection_section_based_intro_conc_logical(
                 paper_id,
                 [tokenize_sent(z[0][1]) for z in zip_sents], [tokenize_sent(s) for s in papers_tgts[paper_id]],
-                sections_lens,
+                sections_lens_vals,
                 all_sections_text,
                 SENT_NUM,
                 doc_section_list=sum(sent_sect_labels_whole[paper_id].values(), []) )
-
+            # except:
+            #     import pdb;pdb.set_trace()
 
             for k,val in dist_percentage.items():
                 sect_percentage[k]+=val
@@ -242,6 +254,10 @@ def modify_labels_multi_section_based(params):
         paper_id = instance['paper_id'].split('___')[0]
 
         paper_labels = new_sent_labels[paper_id]
+        if paper_id=="astro-ph9805315":
+            print(instance['paper_id'])
+        # if sum([sum(s) for s in paper_labels.values()]) > 15:
+        #     print('heree')
         sum([sum(labels) for seg, labels in paper_labels.items()])
         sum([len(labels) for seg, labels in paper_labels.items()])
 
@@ -256,6 +272,8 @@ def modify_labels_multi_section_based(params):
                 # [len(sents) for seg, sents in papers_src[paper_id].items()]) > SENT_NUM:
             paper_count.add(paper_id)
             sent_labels = new_sent_labels[paper_id][instance['paper_id']]
+            # if sum(sent_labels) > 15:
+            #     print(paper_id)
             instance['sent_labels'] = sent_labels
             # if paper_id == 'hep-ex0111032' and instance['paper_id']=='hep-ex0111032___measurement of the @xmath and @xmath decays___0':
             #     import pdb;

@@ -21,6 +21,7 @@ from others.logging import logger
 from prepro.data_builder import LongformerData
 # from utils.rouge_pap import get_rouge_pap
 from utils.rouge_score import evaluate_rouge
+from utils.spreadsheet import update_rouge_score_drive, update_recall_drive, update_step
 
 
 def _multi_rg(params):
@@ -111,7 +112,7 @@ class Trainer(object):
         self.alpha = args.alpha_mtl
         self.save_checkpoint_steps = args.save_checkpoint_steps
         self.model = model
-        self.is_joint = getattr(self.model, 'is_joint')
+        self.intro_cls = getattr(self.model, 'intro_cls')
         self.optim = optim
         self.grad_accum_count = grad_accum_count
         self.n_gpu = n_gpu
@@ -123,10 +124,6 @@ class Trainer(object):
         self.best_val_step = 0
         # self.loss = torch.nn.BCELoss(reduction='none')
         self.rg_predictor = False
-
-        if self.args.rg_predictor:
-            self.mse_loss = torch.nn.MSELoss(reduction='none')
-            self.rg_predictor = True
 
         self.rmse_loss = torch.nn.MSELoss(reduction='none')
         # self.loss_sect = torch.nn.CrossEntropyLoss(reduction='none')
@@ -172,9 +169,9 @@ class Trainer(object):
 
         total_stats = Statistics()
         valid_global_stats = Statistics(stat_file_dir=self.args.model_path)
-        valid_global_stats.write_stat_header(self.is_joint)
+        valid_global_stats.write_stat_header(self.intro_cls)
         # report_stats = Statistics(print_traj=self.is_joint)
-        report_stats = Statistics(print_traj=self.is_joint)
+        report_stats = Statistics(print_traj=self.intro_cls)
         self._start_report_manager(start_time=total_stats.start_time)
 
         while step <= train_steps:
@@ -202,14 +199,14 @@ class Trainer(object):
 
                         report_stats = self._maybe_report_training(
                             step, train_steps,
-                            self.optim.learning_rate,
-                            self.model.uncertainty_loss._sigmas_sq[0].item() if self.is_joint else 0,
-                            self.model.uncertainty_loss._sigmas_sq[1].item() if self.is_joint else 0,
-                            report_stats)
+                            self.optim.learning_rate,report_stats
+                            # self.model.uncertainty_loss._sigmas_sq[0].item() if self.intro_cls else 0,
+                            # self.model.uncertainty_loss._sigmas_sq[1].item() if self.intro_cls else 0,
+                            )
 
                         self._report_step(self.optim.learning_rate, step,
-                                          self.model.uncertainty_loss._sigmas_sq[0] if self.is_joint else 0,
-                                          self.model.uncertainty_loss._sigmas_sq[1] if self.is_joint else 0,
+                                          # self.model.uncertainty_loss._sigmas_sq[0] if self.intro_cls else 0,
+                                          # self.model.uncertainty_loss._sigmas_sq[1] if self.intro_cls else 0,
                                           train_stats=report_stats)
 
                         true_batchs = []
@@ -223,30 +220,37 @@ class Trainer(object):
                             self._save(step, best=best_model_save, recall_model=best_recall_model_save,
                                        valstat=val_stat)
 
-                        # if step == 5 or step % self.args.val_interval == 0:  # Validation
-                        if step % self.args.val_interval == 0:  # Validation
+                        # if step == 100 or step % self.args.val_interval == 0:  # Validation
+                        if step != 10000 and step % self.args.val_interval == 0:  # Validation
+                        # if step % self.args.val_interval == 0:  # Validation
                             logger.info('----------------------------------------')
                             logger.info('Start evaluating on evaluation set... ')
                             self.args.pick_top = True
+                            self.args.finetune_bert = False
 
                             val_stat, best_model_save, best_recall_model_save = self.validate_rouge_baseline(
                                 valid_iter_fct, step,
                                 valid_gl_stats=valid_global_stats)
+
 
                             if best_model_save:
                                 self._save(step, best=True, valstat=val_stat)
                                 logger.info(f'Best model saved sucessfully at step %d' % step)
                                 self.best_val_step = step
 
-                            if best_recall_model_save:
-                                self._save(step, best=True, valstat=val_stat, recall_model=True)
-                                logger.info(f'Best model saved sucessfully at step %d' % step)
-                                self.best_val_step = step
+                            update_step(self.args.bert_data_path, self.args.gd_cell_step, "{} / {}".format(self.best_val_step, step))
+
+                            # if best_recall_model_save:
+                            #     self._save(step, best=True, valstat=val_stat, recall_model=True)
+                            #     logger.info(f'Best model saved sucessfully at step %d' % step)
+                            #     self.best_val_step = step
 
                             self.save_validation_results(step, val_stat)
 
+
                             logger.info('----------------------------------------')
                             self.model.train()
+                            self.args.finetune_bert = True
 
                         step += 1
                         if step > train_steps:
@@ -325,18 +329,22 @@ class Trainer(object):
         with torch.no_grad():
             for batch in tqdm(valid_iter):
                 src = batch.src
-                labels = batch.src_sent_labels
-                sent_labels = batch.sent_labels
+                src_intro = batch.src_intro
+                labels = batch.src_sent_rg
+                sent_bin_labels = batch.sent_labels
+                intro_sent_labels = batch.intro_sent_labels
 
-                if self.rg_predictor:
-                    sent_true_rg = batch.src_sent_labels
-                else:
-                    sent_labels = batch.sent_labels
                 segs = batch.segs
+
                 clss = batch.clss
+                intro_clss = batch.intro_clss
+
                 # section_rg = batch.section_rg
                 mask = batch.mask_src
                 mask_cls = batch.mask_cls
+                mask_intro_cls = batch.mask_intro_cls
+
+                mask_src_intro = batch.mask_src_intro
                 p_id = batch.paper_id
                 segment_src = batch.src_str
                 paper_tgt = batch.tgt_str
@@ -346,56 +354,38 @@ class Trainer(object):
                 sent_tokens_count = batch.sent_token_count
 
                 sent_sect_labels = batch.sent_sect_labels
-                if self.is_joint:
-                    if not self.rg_predictor:
-                        sent_scores, sent_sect_scores, mask, loss, loss_sent, loss_sect = self.model(src, segs, clss,
-                                                                                                     mask, mask_cls,
-                                                                                                     sent_labels,
-                                                                                                     sent_sect_labels)
-                    else:
-                        sent_scores, sent_sect_scores, mask, loss, loss_sent, loss_sect = self.model(src, segs, clss,
-                                                                                                     mask, mask_cls,
-                                                                                                     sent_true_rg,
-                                                                                                     sent_sect_labels)
-                    acc, _ = self._get_mertrics(sent_sect_scores, sent_sect_labels, mask=mask,
-                                                task='sent_sect')
+                if self.intro_cls:
+                    sent_scores, mask_cls, loss, intro_loss, loss_src = self.model(src, src_intro, segs, clss, intro_clss,
+                                                             mask, mask_src_intro, mask_cls, mask_intro_cls,
+                                                             sent_bin_labels, intro_sent_labels,
+                                                             sent_sect_labels, p_id)
+
+                    # acc, _ = self._get_mertrics(sent_sect_scores, sent_sect_labels, mask=mask,
+                    #                             task='sent_sect')
 
                     batch_stats = Statistics(loss=float(loss.cpu().data.numpy().sum()),
-                                             loss_sect=float(loss_sect.cpu().data.numpy().sum()),
-                                             loss_sent=float(loss_sent.cpu().data.numpy().sum()),
+                                             loss_sect=float(loss_src.cpu().data.numpy().sum()),
+                                             loss_sent=float(intro_loss.cpu().data.numpy().sum()),
                                              n_docs=len(labels),
-                                             n_acc=batch.batch_size,
-                                             RMSE=self._get_mertrics(sent_scores, labels, mask=mask, task='sent'),
-                                             accuracy=acc)
+                                             # n_acc=batch.batch_size,
+                                             RMSE=self._get_mertrics(sent_scores, labels, mask=mask_cls, task='sent'),
+                                             # accuracy=acc
+                                             )
 
-                else:
-                    if not self.rg_predictor:
-                        sent_scores, mask, loss, _, _ = self.model(src, segs, clss, mask, mask_cls, sent_labels,
-                                                                   sent_sect_labels=None, is_inference=True)
-                    else:
-                        sent_scores, mask, loss, _, _ = self.model(src, segs, clss, mask, mask_cls, sent_true_rg,
-                                                                   sent_sect_labels=None, is_inference=True)
-
-                    # sent_scores = (section_rg.unsqueeze(1).expand_as(sent_scores).to(device='cuda')*100) * sent_scores
-
-                    batch_stats = Statistics(loss=float(loss.cpu().data.numpy().sum()),
-                                             RMSE=self._get_mertrics(sent_scores, labels, mask=mask, task='sent'),
-                                             n_acc=batch.batch_size,
-                                             n_docs=len(labels))
 
                 stats.update(batch_stats)
 
-                sent_scores = sent_scores + mask.float()
+                # sent_scores = sent_scores + mask_cls.float()
                 sent_scores = sent_scores.cpu().data.numpy()
 
                 for idx, p_id in enumerate(p_id):
                     p_id = p_id.split('___')[0]
 
                     if p_id not in sent_scores_whole.keys():
-                        masked_scores = sent_scores[idx] * mask[idx].cpu().data.numpy()
+                        masked_scores = sent_scores[idx] * mask_cls[idx].cpu().data.numpy()
                         masked_scores = masked_scores[np.nonzero(masked_scores)]
 
-                        masked_sent_labels_true = (sent_labels[idx] + 1) * mask[idx].long()
+                        masked_sent_labels_true = (sent_bin_labels[idx] + 1) * mask_cls[idx].long()
 
                         masked_sent_labels_true = masked_sent_labels_true[np.nonzero(masked_sent_labels_true)].flatten()
                         masked_sent_labels_true = (masked_sent_labels_true - 1)
@@ -403,33 +393,27 @@ class Trainer(object):
                         sent_scores_whole[p_id] = masked_scores
                         sent_labels_true[p_id] = masked_sent_labels_true.cpu()
 
-                        masked_sents_sections_true = (sent_sect_labels[idx] + 1) * mask[idx].long()
+                        masked_sents_sections_true = (sent_sect_labels[idx] + 1) * mask_cls[idx].long()
 
                         masked_sents_sections_true = masked_sents_sections_true[
                             np.nonzero(masked_sents_sections_true)].flatten()
                         masked_sents_sections_true = (masked_sents_sections_true - 1)
                         sent_sects_whole_true[p_id] = masked_sents_sections_true.cpu()
 
-                        if self.is_joint:
-                            masked_scores_sects = sent_sect_scores[idx] * mask[idx].view(-1, 1).expand_as(
-                                sent_sect_scores[idx]).float()
-                            masked_scores_sects = masked_scores_sects[torch.abs(masked_scores_sects).sum(dim=1) != 0]
-                            sent_sects_whole_pred[p_id] = torch.max(self.softmax(masked_scores_sects), 1)[1].cpu()
 
                         paper_srcs[p_id] = segment_src[idx]
                         if sent_numbers[0] is not None:
                             sent_numbers_whole[p_id] = sent_numbers[idx]
-                            # sent_tokens_count_whole[p_id] = sent_tokens_count[idx]
                         paper_tgts[p_id] = paper_tgt[idx]
                         sent_sect_wise_rg_whole[p_id] = sent_sect_wise_rg[idx]
                         sent_sections_txt_whole[p_id] = sent_sections_txt[idx]
 
 
                     else:
-                        masked_scores = sent_scores[idx] * mask[idx].cpu().data.numpy()
+                        masked_scores = sent_scores[idx] * mask_cls[idx].cpu().data.numpy()
                         masked_scores = masked_scores[np.nonzero(masked_scores)]
 
-                        masked_sent_labels_true = (sent_labels[idx] + 1) * mask[idx].long()
+                        masked_sent_labels_true = (sent_bin_labels[idx] + 1) * mask_cls[idx].long()
                         masked_sent_labels_true = masked_sent_labels_true[np.nonzero(masked_sent_labels_true)].flatten()
                         masked_sent_labels_true = (masked_sent_labels_true - 1)
 
@@ -437,21 +421,12 @@ class Trainer(object):
                         sent_labels_true[p_id] = np.concatenate((sent_labels_true[p_id], masked_sent_labels_true.cpu()),
                                                                 0)
 
-                        masked_sents_sections_true = (sent_sect_labels[idx] + 1) * mask[idx].long()
+                        masked_sents_sections_true = (sent_sect_labels[idx] + 1) * mask_cls[idx].long()
                         masked_sents_sections_true = masked_sents_sections_true[
                             np.nonzero(masked_sents_sections_true)].flatten()
                         masked_sents_sections_true = (masked_sents_sections_true - 1)
                         sent_sects_whole_true[p_id] = np.concatenate(
                             (sent_sects_whole_true[p_id], masked_sents_sections_true.cpu()), 0)
-
-                        if self.is_joint:
-                            masked_scores_sects = sent_sect_scores[idx] * mask[idx].view(-1, 1).expand_as(
-                                sent_sect_scores[idx]).float()
-                            masked_scores_sects = masked_scores_sects[
-                                torch.abs(masked_scores_sects).sum(dim=1) != 0]
-                            sent_sects_whole_pred[p_id] = np.concatenate(
-                                (sent_sects_whole_pred[p_id], torch.max(self.softmax(masked_scores_sects), 1)[1].cpu()),
-                                0)
 
                         paper_srcs[p_id] = np.concatenate((paper_srcs[p_id], segment_src[idx]), 0)
                         if sent_numbers[0] is not None:
@@ -464,96 +439,91 @@ class Trainer(object):
                         sent_sections_txt_whole[p_id] = np.concatenate(
                             (sent_sections_txt_whole[p_id], sent_sections_txt[idx]), 0)
 
-        if self.args.pick_top:
-            preds_sent_numbers = {}
-
-            saved_dict = {}
-            paper_sent_scores = []
-            logger.info("Picking top sentences for second phase...")
-            for p_idx, (p_id, sent_scores) in enumerate(sent_scores_whole.items()):
-                paper_sent_true_labels = np.array(sent_labels_true[p_id])
-                if self.is_joint:
-                    sent_sects_true = np.array(sent_sects_whole_true[p_id])
-                    sent_sects_pred = np.array(sent_sects_whole_pred[p_id])
-
-                sent_scores = np.array(sent_scores)
-                p_src = np.array(paper_srcs[p_id])
-                paper_sent_true_labels = np.array(sent_labels_true[p_id])
-                if sent_numbers is not None:
-                    p_sent_numbers = np.array(sent_numbers_whole[p_id])
-                else:
-                    p_sent_numbers = None
-                p_sent_sent_sects_true = np.array(sent_sects_whole_true[p_id])
-
-                saved_dict[p_id] = (sent_scores, p_id, p_src, p_sent_numbers, p_sent_sent_sects_true)
-
-                selected_ids_unsorted = np.argsort(-sent_scores, 0)
-                keep_ids = [idx for idx, s in enumerate(p_src) if
-                            len(s.replace('.', '').replace(',', '').replace('(', '').replace(')', '').
-                                replace('-', '').replace(':', '').replace(';', '').replace('*', '').split()) > 5 and
-                            len(s.replace('.', '').replace(',', '').replace('(', '').replace(')', '').
-                                replace('-', '').replace(':', '').replace(';', '').replace('*', '').split()) < 120
-                            ]
-
-                keep_ids = sorted(keep_ids)
-
-                # top_sent_indexes = top_sent_indexes[top_sent_indexes]
-                p_src = p_src[keep_ids]
-                p_sent_numbers = p_sent_numbers[keep_ids]
-                # p_sent_tokens_count = p_sent_tokens_count[keep_ids]
-                sent_scores = sent_scores[keep_ids]
-                p_sent_sent_sects_true = p_sent_sent_sects_true[keep_ids]
-                paper_sent_true_labels = paper_sent_true_labels[keep_ids]
-                # sent_true_labels = sent_true_labels[keep_ids]
-
-                sent_scores = np.asarray([s - 1.00 for s in sent_scores])
-
-                paper_sent_scores.append((sent_scores, p_id, p_src, p_sent_numbers, p_sent_sent_sects_true,
-                                          paper_sent_true_labels, self.bert, "section-stat"))
+        # if self.args.pick_top:
+        #     preds_sent_numbers = {}
+        #
+        #     saved_dict = {}
+        #     paper_sent_scores = []
+        #     logger.info("Picking top sentences for second phase...")
+        #     for p_idx, (p_id, sent_scores) in enumerate(sent_scores_whole.items()):
+        #         paper_sent_true_labels = np.array(sent_labels_true[p_id])
+        #         sent_scores = np.array(sent_scores)
+        #         p_src = np.array(paper_srcs[p_id])
+        #
+        #         if sent_numbers is not None:
+        #             p_sent_numbers = np.array(sent_numbers_whole[p_id])
+        #         else:
+        #             p_sent_numbers = None
+        #         p_sent_sent_sects_true = np.array(sent_sects_whole_true[p_id])
+        #
+        #         saved_dict[p_id] = (sent_scores, p_id, p_src, p_sent_numbers, p_sent_sent_sects_true)
+        #
+        #         keep_ids = [idx for idx, s in enumerate(p_src) if
+        #                     len(s.replace('.', '').replace(',', '').replace('(', '').replace(')', '').
+        #                         replace('-', '').replace(':', '').replace(';', '').replace('*', '').split()) > 5 and
+        #                     len(s.replace('.', '').replace(',', '').replace('(', '').replace(')', '').
+        #                         replace('-', '').replace(':', '').replace(';', '').replace('*', '').split()) < 120
+        #                     ]
+        #
+        #         keep_ids = sorted(keep_ids)
+        #
+        #         # top_sent_indexes = top_sent_indexes[top_sent_indexes]
+        #         p_src = p_src[keep_ids]
+        #         p_sent_numbers = p_sent_numbers[keep_ids]
+        #         # p_sent_tokens_count = p_sent_tokens_count[keep_ids]
+        #         sent_scores = sent_scores[keep_ids]
+        #         p_sent_sent_sects_true = p_sent_sent_sects_true[keep_ids]
+        #         paper_sent_true_labels = paper_sent_true_labels[keep_ids]
+        #         # sent_true_labels = sent_true_labels[keep_ids]
+        #
+        #         # sent_scores = np.asarray([s - 1.00 for s in sent_scores])
+        #
+        #         paper_sent_scores.append((sent_scores, p_id, p_src, p_sent_numbers, p_sent_sent_sects_true,
+        #                                   paper_sent_true_labels, self.bert, "section-stat"))
 
             # pickle.dump(paper_sent_scores,
             #             open(self.args.saved_list_name.replace('.p', '-sent-scores.p'), "wb"))
             # paper_sent_scores = pickle.load(open(self.args.saved_list_name.replace('.p', '-sent-scores.p'),'rb'))
-            overall_recall1, preds_sent_numbers = self.extract_top_sents(paper_sent_scores)
+            # overall_recall1, preds_sent_numbers = self.extract_top_sents(paper_sent_scores)
 
-            logger.info("Recall-top section stat: %4.4f" % (overall_recall1))
+            # logger.info("Recall-top section stat: %4.4f" % (overall_recall1))
 
-            self.overall_recalls.append(overall_recall1)
-            if len(self.overall_recalls) > 0:
-                if self.overall_recall < self.overall_recalls[-1]:
-                    self.overall_recall = self.overall_recalls[-1]
-                    best_recall_model_saved = True
+            # self.overall_recalls.append(overall_recall1)
+            # if len(self.overall_recalls) > 0:
+            #     if self.overall_recall < self.overall_recalls[-1]:
+            #         self.overall_recall = self.overall_recalls[-1]
+            #         best_recall_model_saved = True
 
-            new_sents = []
-            for p in paper_sent_scores:
-                new_sents.append(p[:-1] + ("normal",))
-            overall_recall2, preds_sent_numbers = self.extract_top_sents(new_sents)
-            logger.info("Recall-top normal: %4.4f" % (overall_recall2))
+            # new_sents = []
+            # for p in paper_sent_scores:
+            #     new_sents.append(p[:-1] + ("normal",))
+            # overall_recall2, preds_sent_numbers = self.extract_top_sents(new_sents)
+            # logger.info("Recall-top normal: %4.4f" % (overall_recall2))
+            #
+            # new_sents = []
+            # for p in paper_sent_scores:
+            #     new_sents.append(p[:-1] + ("section-equal",))
+            # overall_recall3, preds_sent_numbers = self.extract_top_sents(new_sents)
+            # logger.info("Recall-top section equal: %4.4f" % (overall_recall3))
+            # stats.set_overall_recall(overall_recall1, overall_recall2, overall_recall3)
 
-            new_sents = []
-            for p in paper_sent_scores:
-                new_sents.append(p[:-1] + ("section-equal",))
-            overall_recall3, preds_sent_numbers = self.extract_top_sents(new_sents)
-            logger.info("Recall-top section equal: %4.4f" % (overall_recall3))
-            stats.set_overall_recall(overall_recall1, overall_recall2, overall_recall3)
+            # if write_scores_to_pickle:
+            #     pickle.dump(preds_sent_numbers,
+            #                 open(self.args.saved_list_name.replace('.p', '-top-sents.p'), "wb"))
 
-            if write_scores_to_pickle:
-                pickle.dump(preds_sent_numbers,
-                            open(self.args.saved_list_name.replace('.p', '-top-sents.p'), "wb"))
-
-        else:
-            if write_scores_to_pickle:
-                saved_dict = {}
-                # source_sent_encodings = {}
-                # sent_sect_wise_rg_whole = {}
-                for p_id, sent_scores in tqdm(sent_scores_whole.items(), total=len(sent_scores_whole)):
-                    # source_sent_encodings[p_id] = [0]
-                    saved_dict[p_id] = (
-                        p_id, sent_scores_whole[p_id], paper_srcs[p_id], paper_tgts[p_id], sent_sects_whole_true[p_id],
-                        sent_sects_whole_true[p_id], sent_sections_txt_whole[p_id],
-                        sent_labels_true[p_id], sent_sect_wise_rg_whole[p_id])
-                print('Now saving picke file...')
-                pickle.dump(saved_dict, open(self.args.saved_list_name, "wb"))
+        # else:
+        #     if write_scores_to_pickle:
+        #         saved_dict = {}
+        #         # source_sent_encodings = {}
+        #         # sent_sect_wise_rg_whole = {}
+        #         for p_id, sent_scores in tqdm(sent_scores_whole.items(), total=len(sent_scores_whole)):
+        #             # source_sent_encodings[p_id] = [0]
+        #             saved_dict[p_id] = (
+        #                 p_id, sent_scores_whole[p_id], paper_srcs[p_id], paper_tgts[p_id], sent_sects_whole_true[p_id],
+        #                 sent_sects_whole_true[p_id], sent_sections_txt_whole[p_id],
+        #                 sent_labels_true[p_id], sent_sect_wise_rg_whole[p_id])
+        #         print('Now saving picke file...')
+        #         pickle.dump(saved_dict, open(self.args.saved_list_name, "wb"))
 
         # else  :
         PRED_LEN = self.args.val_pred_len
@@ -566,9 +536,6 @@ class Trainer(object):
             # sent_true_labels = pickle.load(open("sent_labels_files/pubmedL/val.labels.p", "rb"))
             # section_textual = np.array(section_textual)
             paper_sent_true_labels = np.array(sent_labels_true[p_id])
-            if self.is_joint:
-                sent_sects_true = np.array(sent_sects_whole_true[p_id])
-                sent_sects_pred = np.array(sent_sects_whole_pred[p_id])
 
             sent_scores = np.array(sent_scores)
             p_src = np.array(paper_srcs[p_id])
@@ -611,16 +578,9 @@ class Trainer(object):
             preds_with_idx[p_id] = _pred
             if p_idx > 10:
                 f, p, r = _get_precision_(paper_sent_true_labels, [p[1] for p in _pred])
-                if self.is_joint:
-                    acc_whole = _get_accuracy_sections(sent_sects_true, sent_sects_pred, [p[1] for p in _pred])
-                    acc_total += acc_whole
 
             else:
                 f, p, r = _get_precision_(paper_sent_true_labels, [p[1] for p in _pred], print_few=True, p_id=p_id)
-                if self.is_joint:
-                    acc_whole = _get_accuracy_sections(sent_sects_true, sent_sects_pred, [p[1] for p in _pred],
-                                                       print_few=True, p_id=p_id)
-                    acc_total += acc_whole
 
             acum_f_sent_labels += f
             acum_p_sent_labels += p
@@ -630,29 +590,22 @@ class Trainer(object):
             save_pred.write(pred.strip().replace('<q>', ' ') + '\n')
             save_gold.write(golds[id].replace('<q>', ' ').strip() + '\n')
 
-        print(f'Gold: {gold_path}')
-        print(f'Prediction: {can_path}')
+        # print(f'Gold: {gold_path}')
+        # print(f'Prediction: {can_path}')
 
         r1, r2, rl = self._report_rouge(preds.values(), golds.values())
         stats.set_rl(r1, r2, rl)
-        try:
-            logger.info("F-score: %4.4f, Prec: %4.4f, Recall: %4.4f" % (
-                acum_f_sent_labels / len(sent_scores_whole), acum_p_sent_labels / len(sent_scores_whole),
-                acum_r_sent_labels / len(sent_scores_whole)))
-            if self.is_joint:
-                logger.info("Section Accuracy: %4.4f" % (acc_total / len(sent_scores_whole)))
-
-        except:
-            import pdb;
-            pdb.set_trace()
+        logger.info("F-score: %4.4f, Prec: %4.4f, Recall: %4.4f" % (
+            acum_f_sent_labels / len(sent_scores_whole), acum_p_sent_labels / len(sent_scores_whole),
+            acum_r_sent_labels / len(sent_scores_whole)))
 
         stats.set_ir_metrics(acum_f_sent_labels / len(sent_scores_whole),
                              acum_p_sent_labels / len(sent_scores_whole),
                              acum_r_sent_labels / len(sent_scores_whole))
         self.valid_rgls.append((r2 + rl) / 2)
         self._report_step(0, step,
-                          self.model.uncertainty_loss._sigmas_sq[0] if self.is_joint else 0,
-                          self.model.uncertainty_loss._sigmas_sq[1] if self.is_joint else 0,
+                          # self.model.uncertainty_loss._sigmas_sq[0] if self.intro_cls else 0,
+                          # self.model.uncertainty_loss._sigmas_sq[1] if self.intro_cls else 0,
                           valid_stats=stats)
 
         if len(self.valid_rgls) > 0:
@@ -665,6 +618,8 @@ class Trainer(object):
     def _gradient_accumulation(self, true_batchs, normalization, total_stats,
                                report_stats):
 
+
+
         if self.grad_accum_count > 1:
             self.model.zero_grad()
 
@@ -673,69 +628,48 @@ class Trainer(object):
                 self.model.zero_grad()
 
             src = batch.src
-            sent_rg_scores = batch.src_sent_labels
+            src_intro = batch.src_intro
+
+            sent_rg_scores = batch.src_sent_rg
 
             sent_sect_labels = batch.sent_sect_labels
+
             sent_bin_labels = batch.sent_labels
-            # if self.rg_predictor:
-            sent_rg_true_scores = batch.src_sent_labels
+            intro_sent_bin_labels = batch.intro_sent_labels
+
+            sent_rg_true_scores = batch.src_sent_rg
             segs = batch.segs
+
             clss = batch.clss
-            mask = batch.mask_src
+            intro_clss = batch.intro_clss
+
+            mask_src = batch.mask_src
+            mask_src_intro = batch.mask_src_intro
+
             mask_cls = batch.mask_cls
+            mask_intro_cls = batch.mask_intro_cls
+
             src_str = batch.src_str
             paper_ids = batch.paper_id
-
-            if self.is_joint:
-                if not self.rg_predictor:
-                    sent_scores, sent_sect_scores, mask, loss, loss_sent, loss_sect = self.model(src, segs, clss, mask,
-                                                                                                 mask_cls,
-                                                                                                 sent_bin_labels,
-                                                                                                 sent_sect_labels)
-                else:
-                    sent_scores, sent_sect_scores, mask, loss, loss_sent, loss_sect = self.model(src, segs, clss, mask,
-                                                                                                 mask_cls,
-                                                                                                 sent_rg_scores,
-                                                                                                 sent_sect_labels)
-                try:
-                    acc, pred = self._get_mertrics(sent_sect_scores, sent_sect_labels, mask=mask, task='sent_sect')
-                except:
-                    import pdb;
-                    pdb.set_trace()
-
+            if self.intro_cls:
+                sent_scores, mask_cls, loss, loss_src, loss_intro = self.model(src, src_intro, segs, clss, intro_clss,
+                                                         mask_src, mask_src_intro,
+                                                         mask_cls, mask_intro_cls,
+                                                         sent_bin_labels, intro_sent_bin_labels,
+                                                         sent_sect_labels, paper_ids)
                 batch_stats = Statistics(loss=float(loss.cpu().data.numpy().sum()),
-                                         loss_sect=float(loss_sect.cpu().data.numpy().sum()),
-                                         loss_sent=float(loss_sent.cpu().data.numpy().sum()), n_docs=normalization,
                                          n_acc=batch.batch_size,
-                                         RMSE=self._get_mertrics(sent_scores, sent_rg_scores, mask=mask, task='sent'),
-                                         accuracy=acc,
-                                         a1=self.model.uncertainty_loss._sigmas_sq[0].item(),
-                                         a2=self.model.uncertainty_loss._sigmas_sq[1].item()
+                                         loss_sect=float(loss_src.cpu().data.numpy().sum()),
+                                         loss_sent=float(loss_intro.cpu().data.numpy().sum()),
+                                         n_docs = batch.batch_size,
+                                         RMSE=self._get_mertrics(sent_scores, sent_rg_scores, mask=mask_cls, task='sent'),
                                          )
 
-
-            else:  # simple
-
-                if not self.rg_predictor:
-                    sent_scores, mask, loss, _, _ = self.model(src, segs, clss, mask, mask_cls,
-                                                               sent_bin_labels=sent_bin_labels, sent_sect_labels=None)
-                else:
-                    sent_scores, mask, loss, _, _ = self.model(src, segs, clss, mask, mask_cls,
-                                                               sent_bin_labels=sent_rg_scores, sent_sect_labels=None)
-
-                # loss = self.loss(sent_scores, sent_rg_scores.float())
-
-                batch_stats = Statistics(loss=float(loss.cpu().data.numpy().sum()),
-                                         RMSE=self._get_mertrics(sent_scores, sent_rg_scores, mask=mask,
-                                                                 task='sent'),
-                                         n_acc=batch.batch_size,
-                                         n_docs=normalization,
-                                         a1=self.model.uncertainty_loss._sigmas_sq[0] if self.is_joint else 0,
-                                         a2=self.model.uncertainty_loss._sigmas_sq[1] if self.is_joint else 0)
 
             loss.backward()
             total_stats.update(batch_stats)
             report_stats.update(batch_stats)
+
 
             # 4. Update the parameters and statistics.
             if self.grad_accum_count == 1:
@@ -764,7 +698,8 @@ class Trainer(object):
         BEST_MODEL_NAME = 'BEST_model_s%d_%4.4f_%4.4f_%4.4f.pt' % (step, valstat.r1, valstat.r2, valstat.rl)
 
         if recall_model:
-            BEST_MODEL_NAME = 'Recall_BEST_model_s%d_%4.4f.pt' % (step, valstat.top_sents_recall_sect_stat)
+            BEST_MODEL_NAME = 'Recall_BEST_model_s%d_rec01(%4.4f)_rec(%4.4f).pt' % (
+                step, valstat.top_sents_recall_01_oracle, valstat.top_sents_recall_oracle)
 
         real_model = self.model
         # real_generator = (self.generator.module
@@ -793,8 +728,13 @@ class Trainer(object):
 
         if best:
             if not recall_model:
+                update_rouge_score_drive(self.args.bert_data_path, self.args.gd_cells_rg,
+                                         [valstat.r1, valstat.r2, valstat.rl])
                 best_path = glob.glob(self.args.model_path + '/BEST_model*.pt')
             else:
+                # update_recall_drive(self.args.bert_data_path, self.args.gd_cell_recall,
+                #                     ("rec01: %4.4f / rec: %4.4f") % (
+                #                         valstat.top_sents_recall_01_oracle, valstat.top_sents_recall_oracle))
                 best_path = glob.glob(self.args.model_path + '/Recall_BEST_model*.pt')
 
             if len(best_path) > 0:
@@ -831,15 +771,15 @@ class Trainer(object):
             return Statistics.all_gather_stats(stat)
         return stat
 
-    def _maybe_report_training(self, step, num_steps, learning_rate, alpha_1, alpha2,
-                               report_stats):
+    def _maybe_report_training(self, step, num_steps, learning_rate, report_stats, alpha_1=0, alpha2=0
+                               ):
         """
         Simple function to report training stats (if report_manager is set)
         see `onmt.utils.ReportManagerBase.report_training` for doc
         """
         if self.report_manager is not None:
             return self.report_manager.report_training(
-                step, num_steps, learning_rate, alpha_1, alpha2, report_stats, is_joint=self.is_joint,
+                step, num_steps, learning_rate, alpha_1, alpha2, report_stats, is_joint=self.intro_cls,
                 multigpu=self.n_gpu > 1)
 
     def _report_step(self, learning_rate, step, alpha1=0, alpha2=0, train_stats=None,
@@ -913,8 +853,10 @@ class Trainer(object):
 
         else:
             mseLoss = self.rmse_loss(sent_scores.float(), labels.float())
-            mseLoss = (mseLoss.float() * mask.float()).sum(dim=1)
-
+            try:
+                mseLoss = (mseLoss.float() * mask.float()).sum(dim=1)
+            except:
+                import pdb;pdb.set_trace()
             # sent_scores = self.softmax_sent(sent_scores)
             # import pdb;pdb.set_trace()
             # pred = torch.max(sent_scores, 2)[1]
@@ -946,9 +888,9 @@ class Trainer(object):
             for metric, score in zip(["RG-1", "RG-2", "RG-L"], [val_stat.r1, val_stat.r2, val_stat.rl]):
                 results[str(step)][metric] = score
 
-            results[str(step)]["Recall-top-section-normal"] = val_stat.top_sents_recall_normal
-            results[str(step)]["Recall-top-section-eq"] = val_stat.top_sents_recall_sect_eq
-            results[str(step)]["Recall-top-section-stat"] = val_stat.top_sents_recall_sect_stat
+            # results[str(step)]["Recall-top-section-normal"] = val_stat.top_sents_recall_normal
+            # results[str(step)]["Recall-top-section-eq"] = val_stat.top_sents_recall_sect_eq
+            # results[str(step)]["Recall-top-section-stat"] = val_stat.top_sents_recall_sect_stat
             results[str(step)]["F1"] = val_stat.f
             with open(os.path.join(self.args.model_path, "val_results", "val.json"), mode='w') as F:
                 json.dump(results, F, indent=4)
@@ -964,9 +906,9 @@ class Trainer(object):
             for metric, score in zip(["RG-1", "RG-2", "RG-L"], [val_stat.r1, val_stat.r2, val_stat.rl]):
                 results_all[str(step)][metric] = score
 
-            results_all[str(step)]["Recall-top-section-normal"] = val_stat.top_sents_recall_normal
-            results_all[str(step)]["Recall-top-section-eq"] = val_stat.top_sents_recall_sect_eq
-            results_all[str(step)]["Recall-top-section-stat"] = val_stat.top_sents_recall_sect_stat
+            # results_all[str(step)]["Recall-top-section-normal"] = val_stat.top_sents_recall_normal
+            # results_all[str(step)]["Recall-top-section-eq"] = val_stat.top_sents_recall_sect_eq
+            # results_all[str(step)]["Recall-top-section-stat"] = val_stat.top_sents_recall_sect_stat
             results_all[str(step)]["F1"] = val_stat.f
             with open(os.path.join(self.args.model_path, "val_results", "val.json"), mode='w') as F:
                 json.dump(results_all, F, indent=4)
@@ -1186,7 +1128,8 @@ def _mult_top_sents(params, idx=None):
     elif type=="section-stat":
         # train_stat = {"0": 0.2930, "1": 0.2027, "2": 0.4666, "3": 0.0378} #arXiv-L
         # train_stat = {"0": 0.2098, "1": 0.2897, "2": 0.415, "3": 0.0854} #LongSumm
-        train_stat = {"0": 0.3044, "1": 0.1672, "2": 0.4872, "3": 0.0412} #PubmedL
+        # train_stat = {"0": 0.3044, "1": 0.1672, "2": 0.4872, "3": 0.0412} #PubmedL
+        train_stat = {"0": 0.2096, "1": 0.2900, "2": 0.4154, "3": 0.0850} #LongSumm-introGuided
         train_stat_norm_first_pass = {}
 
         for k, t in train_stat.items():
@@ -1289,3 +1232,4 @@ def _mult_top_sents(params, idx=None):
     tp = len([1 for x in paper_sampling_sent_indeces if p_sent_true_labels[x] == 1])
     recall = tp / sum(p_sent_true_labels)
     return p_id, sorted(paper_sampling_sent_numbers), recall
+

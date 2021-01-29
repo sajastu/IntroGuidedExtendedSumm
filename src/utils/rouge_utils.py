@@ -11,7 +11,7 @@ from utils.rouge_score import evaluate_rouge
 
 logger = logging.getLogger('ftpuploader')
 
-INTRO_KWs_STR = "[introduction, introduction and motivation, motivation, motivations, basics and motivations, conclusions and discussion, introduction., [sec:intro]introduction, *introduction*, i. introduction, [sec:level1]introduction, introduction and motivation, introduction[sec:intro], [intro]introduction, introduction and main results, introduction[intro], introduction and summary, [sec:introduction]introduction, overview, 1. introduction, [sec:intro] introduction, introduction[sec:introduction], introduction and results, introduction and background, [sec1]introduction, [introduction]introduction, introduction and statement of results, introduction[introduction], introduction and overview, introduction:, [intro] introduction, [sec:1]introduction, authors contributions, introduction and main result, introduction[sec1], [sec:level1] introduction, motivations, outline, introductory remarks, [sec1] introduction, introduction and motivations, 1.introduction, introduction and definitions, introduction and notation, introduction and statement of the results, i.introduction, introduction[s1], [sec:level1]introduction +,  introduction., introduction[s:intro], [i]introduction, [sec:int]introduction, introduction and observations, [introduction] introduction, [sec:1] introduction, **introduction**, [seci]introduction, introduction and conclusions, **introduction**, [seci]introduction, introduction and summary of results, introduction and outline, preliminary remarks, general introduction, [sec:intr]introduction, [s1]introduction, introduction[sec_intro], introduction and statement of main results, scientific motivation, [sec:sec1]introduction, *questions*, introduction and the model, intoduction, challenges, introduction[sec-intro], introduction and result, inroduction, [sec:intro]introduction +, introdution, 1 introduction, brief summary, motivation and introduction, [1]introduction, introduction and related work, contributions, [sec:one]introduction, [section1]introduction, [sect:intro]introduction]"
+INTRO_KWs_STR = "[introduction, introduction and motivation, motivation, motivations, basics and motivations, conclusions and discussion, introduction., [sec:intro]introduction, *introduction*, i. introduction, [sec:level1]introduction, introduction and motivation, introduction[sec:intro], [intro]introduction, introduction and main results, introduction[intro], introduction and summary, [sec:introduction]introduction, overview, 1. introduction, [sec:intro] introduction, introduction[sec:introduction], introduction and results, introduction and background, [sec1]introduction, [introduction]introduction, introduction and statement of results, introduction[introduction], introduction and overview, introduction:, [intro] introduction, [sec:1]introduction, introduction and main result, introduction[sec1], [sec:level1] introduction, motivations, outline, introductory remarks, [sec1] introduction, introduction and motivations, 1.introduction, introduction and definitions, introduction and notation, introduction and statement of the results, i.introduction, introduction[s1], [sec:level1]introduction +,  introduction., introduction[s:intro], [i]introduction, [sec:int]introduction, introduction and observations, [introduction] introduction, [sec:1] introduction, **introduction**, [seci]introduction, introduction and conclusions, **introduction**, [seci]introduction, introduction and summary of results, introduction and outline, preliminary remarks, general introduction, [sec:intr]introduction, [s1]introduction, introduction[sec_intro], introduction and statement of main results, scientific motivation, [sec:sec1]introduction, *questions*, introduction and the model, intoduction, challenges, introduction[sec-intro], introduction and result, inroduction, [sec:intro]introduction +, introdution, 1 introduction, brief summary, motivation and introduction, [1]introduction, introduction and related work, [sec:one]introduction, [section1]introduction, [sect:intro]introduction]"
 
 INTRO_KWs_STR = "[" + str(['' + kw.strip() + '' for kw in INTRO_KWs_STR[1:-1].split(',')]) + "]"
 INTRO_KWs = eval(INTRO_KWs_STR)[0]
@@ -420,9 +420,8 @@ def greedy_selection_section_based_intro_conc(paper_id, doc_sent_list, abstract_
     selected = sorted(selected)
     selected_intro_conc = selected.copy()
 
-
     if len(selected_intro_conc) < (summary_size - (8 * summary_size) // 10):
-        sampling_sections = [0,1,2, 3]
+        sampling_sections = [0, 1, 2, 3]
     else:
         sampling_sections = [2, 3]
 
@@ -479,7 +478,6 @@ def greedy_selection_section_based_intro_conc(paper_id, doc_sent_list, abstract_
                 break
         if len(selected_samples) + len(selected_intro_conc) == summary_size:
             break
-
 
     selected_final = selected_samples.copy() + selected_intro_conc.copy()
 
@@ -564,4 +562,608 @@ def greedy_selection_section_based_intro_conc(paper_id, doc_sent_list, abstract_
 
     # print(evaluate_rouge([oracle.strip()], [' '.join([' '.join(g) for g in abstract_sent_list])]))
     # import pdb;pdb.set_trace()
+    return sorted(selected_final), selected_sents_dist, percentage, percentage_section_ID
+
+
+def greedy_selection_section_based_intro_conc(paper_id, doc_sent_list, abstract_sent_list, section_lens, sections_text,
+                                              summary_size, doc_section_list=None):
+    def _rouge_clean(s):
+        return re.sub(r'[^a-zA-Z0-9 ]', '', s)
+
+    def get_section_idx(index):
+        section = 0
+        for idx, s in enumerate(section_indeces):
+            if index > s:
+                section = idx
+            if index < s:
+                break
+        return section
+
+    def is_idx_in_sections(section_idx, checked_idx):
+        for sect_idx, sect_number in enumerate(section_idx):
+            if sect_number < len(section_lens):
+                if checked_idx >= section_indeces[sect_number] \
+                        and checked_idx < section_indeces[sect_number + 1]:
+                    return True
+            else:
+                if checked_idx >= section_indeces[sect_number]:
+                    return True
+
+        return False
+
+    def is_idx_in_sectionIDs(section_ids, checked_idx):
+
+        for sect_id in section_ids:
+            if doc_section_list[checked_idx] == sect_id:
+                return True
+        return False
+
+    def get_eligible_sections(fetch_sections):
+        out = []
+        for sect in fetch_sections:
+
+            if sect == 'abstract':
+                jump = False
+                for kw in ABS_KWs:
+                    for j, sect_heading in enumerate(sections_text):
+                        if kw.lower() in sect_heading:
+                            out.append(j)
+                            jump = True
+                            break
+                    if jump:
+                        break
+
+            if sect == 'introduction':
+
+                jump = False
+                for kw in INTRO_KWs:
+                    for j, sect_heading in enumerate(sections_text):
+                        if kw.lower() in sect_heading:
+                            out.append(j)
+                            jump = True
+                            break
+                    if jump:
+                        break
+
+            if sect == 'conclusion':
+                jump = False
+                for kw in CONC_KWs:
+                    for j, sect_heading in enumerate(sections_text):
+                        if kw.lower() in sect_heading:
+                            out.append(j)
+                            jump = True
+                            break
+                    if jump:
+                        break
+
+        if len(out) == 0:
+            return [0]
+        return out
+
+    def get_eligible_section_ids(fetch_sections):
+        out = []
+        for sect in fetch_sections:
+            # if sect == 4:
+            #     continue
+            # else:
+            out.append(sect)
+        return out
+
+    sections_text = [s.lower() for s in sections_text]
+    doc_sent_list = np.array(doc_sent_list, dtype=object)
+    section_indeces = [sum(section_lens[:i]) for i in range(len(section_lens))]
+    section_indeces = [section_indeces[0]] + [s for s in section_indeces[1:]] + [sum(section_lens[:len(section_lens)])]
+    picked_sent_intro_conc = 0
+    max_rouge = 0.0
+
+    abstract = sum(abstract_sent_list, [])
+    abstract = _rouge_clean(' '.join(abstract)).split()
+    sents = [_rouge_clean(' '.join(s)).split() for s in doc_sent_list]
+    evaluated_1grams = [_get_word_ngrams(1, [sent]) for sent in sents]
+    reference_1grams = _get_word_ngrams(1, [abstract])
+    reference_2grams = _get_word_ngrams(2, [abstract])
+    evaluated_2grams = [_get_word_ngrams(2, [sent]) for sent in sents]
+
+    selected = []
+    selected_sents_dist = {}
+    for idx, len_sect in enumerate(section_lens):
+        selected_sents_dist[idx] = 0
+
+    if doc_section_list is not None:
+        selected_sents_dist_sectionIDs = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
+
+    get_eligible_parts = get_eligible_sections
+    eligible_parts_args = ['abstract', 'introduction', 'conclusion']
+    is_idx_in_global = is_idx_in_sections
+    if doc_section_list is not None:
+        get_eligible_parts = get_eligible_section_ids
+        eligible_parts_args = [0, 1]
+        is_idx_in_global = is_idx_in_sectionIDs
+
+    for s in range(summary_size - (5 * summary_size) // 10):
+        cur_max_rouge = max_rouge
+        cur_id = -1
+        eligible_sections_intro_conc = get_eligible_parts(eligible_parts_args)
+        for i in range(len(sents)):
+            if (i in selected or not is_idx_in_global(eligible_sections_intro_conc, i)):
+                continue
+            c = selected + [i]
+            candidates_1grams = [evaluated_1grams[idx] for idx in c]
+            candidates_1grams = set.union(*map(set, candidates_1grams))
+            candidates_2grams = [evaluated_2grams[idx] for idx in c]
+            candidates_2grams = set.union(*map(set, candidates_2grams))
+            rouge_1 = cal_rouge(candidates_1grams, reference_1grams)['f']
+            rouge_2 = cal_rouge(candidates_2grams, reference_2grams)['f']
+            rouge_score = rouge_1 + rouge_2
+            if rouge_score >= cur_max_rouge:
+                cur_max_rouge = rouge_score
+                cur_id = i
+        if (cur_id == -1):
+            break
+
+        selected.append(cur_id)
+        max_rouge = cur_max_rouge
+        selected_sents_dist[get_section_idx(cur_id)] += 1
+        if doc_section_list is not None:
+            selected_sents_dist_sectionIDs[str(doc_section_list[cur_id])] += 1
+        picked_sent_intro_conc += 1
+
+    selected = sorted(selected)
+    selected_intro_conc = selected.copy()
+
+    if len(selected_intro_conc) < (summary_size - (8 * summary_size) // 10):
+        sampling_sections = [0, 1, 2, 3]
+    else:
+        sampling_sections = [2, 3]
+
+    if len(sampling_sections) == 0:
+        sampling_sections = get_eligible_parts(['abstract', 'introduction', 'conclusion'])
+    # expand the summary sentences, select 2 expandable sentences for each summary sentence
+
+    selected_samples = list()
+    for i_intro in selected_intro_conc:
+        selected = list()
+        max_rouge = 0.0
+        reference_1grams = _get_word_ngrams(1, [doc_sent_list[i_intro]])
+        reference_2grams = _get_word_ngrams(2, [doc_sent_list[i_intro]])
+
+        for s in range(((summary_size - picked_sent_intro_conc) // picked_sent_intro_conc)):
+            cur_max_rouge = max_rouge
+            cur_id = -1
+            for i in range(len(sents)):
+                if i in selected:
+                    continue
+                if (i in selected_samples):
+                    continue
+                if (i in selected_intro_conc):
+                    continue
+                if (not is_idx_in_global(sampling_sections, i)):
+                    continue
+
+                c = selected + [i]
+                candidates_1grams = [evaluated_1grams[idx] for idx in c]
+                candidates_1grams = set.union(*map(set, candidates_1grams))
+
+                candidates_2grams = [evaluated_2grams[idx] for idx in c]
+                candidates_2grams = set.union(*map(set, candidates_2grams))
+
+                rouge_1 = cal_rouge(candidates_1grams, reference_1grams)['f']
+                rouge_2 = cal_rouge(candidates_2grams, reference_2grams)['f']
+
+                rouge_score = rouge_1 + rouge_2
+                if rouge_score >= cur_max_rouge:
+                    cur_max_rouge = rouge_score
+                    cur_id = i
+
+            if cur_id == -1:
+                break
+
+            selected.append(cur_id)
+            max_rouge = cur_max_rouge
+            selected_sents_dist[get_section_idx(cur_id)] += 1
+            if doc_section_list is not None:
+                selected_sents_dist_sectionIDs[str(doc_section_list[cur_id])] += 1
+        for s in selected:
+            selected_samples.append(s)
+            if len(selected_samples) + len(selected_intro_conc) == summary_size:
+                break
+        if len(selected_samples) + len(selected_intro_conc) == summary_size:
+            break
+
+    selected_final = selected_samples.copy() + selected_intro_conc.copy()
+
+    if len(selected_final) < summary_size:
+        selected_samples = list()
+        for i_intro in selected_intro_conc:
+            selected = list()
+            max_rouge = 0.0
+            reference_1grams = _get_word_ngrams(1, [doc_sent_list[i_intro]])
+            reference_2grams = _get_word_ngrams(2, [doc_sent_list[i_intro]])
+
+            for s in range(((summary_size - picked_sent_intro_conc) // picked_sent_intro_conc) + 1):
+                cur_max_rouge = max_rouge
+                cur_id = -1
+                for i in range(len(sents)):
+                    if i in selected:
+                        continue
+                    if (i in selected_samples):
+                        continue
+                    if (i in selected_final):
+                        continue
+                    if (not is_idx_in_global(sampling_sections, i)):
+                        continue
+
+                    c = selected + [i]
+                    candidates_1grams = [evaluated_1grams[idx] for idx in c]
+                    candidates_1grams = set.union(*map(set, candidates_1grams))
+
+                    candidates_2grams = [evaluated_2grams[idx] for idx in c]
+                    candidates_2grams = set.union(*map(set, candidates_2grams))
+
+                    rouge_1 = cal_rouge(candidates_1grams, reference_1grams)['f']
+                    rouge_2 = cal_rouge(candidates_2grams, reference_2grams)['f']
+
+                    rouge_score = rouge_1 + rouge_2
+                    if rouge_score >= cur_max_rouge:
+                        cur_max_rouge = rouge_score
+                        cur_id = i
+
+                if cur_id == -1:
+                    break
+
+                selected.append(cur_id)
+                max_rouge = cur_max_rouge
+                selected_sents_dist[get_section_idx(cur_id)] += 1
+                if doc_section_list is not None:
+                    selected_sents_dist_sectionIDs[str(doc_section_list[cur_id])] += 1
+
+            for s in selected:
+                selected_samples.append(s)
+                if len(selected_samples) + len(selected_final) == summary_size:
+                    break
+            if len(selected_samples) + len(selected_final) == summary_size:
+                break
+
+        selected_final += selected_samples
+    heading_dict = {}
+    for heading, count in zip(sections_text, selected_sents_dist.values()):
+        heading_dict[heading] = count
+    selected_sents_dist_5labels = transfer_to_5label(heading_dict)
+
+    percentage = {}
+    for k, v in selected_sents_dist_5labels.items():
+        try:
+            percentage[k] = v / sum(selected_sents_dist_5labels.values())
+        except:
+            percentage[k] = v / summary_size
+
+    if doc_section_list is not None:
+        percentage_section_ID = {}
+        for k, v in selected_sents_dist_sectionIDs.items():
+            try:
+                percentage_section_ID[k] = v / sum(selected_sents_dist_sectionIDs.values())
+            except Exception as e:
+                # logger.error('Failed since: ' + str(e))
+                percentage_section_ID[k] = v / summary_size
+
+    # oracle = ''
+    # for pred in sorted(selected_final):
+    #     oracle += ' '.join(doc_sent_list[pred])
+    #     oracle += ' '
+
+    # print(evaluate_rouge([oracle.strip()], [' '.join([' '.join(g) for g in abstract_sent_list])]))
+    # import pdb;pdb.set_trace()
+    return sorted(selected_final), selected_sents_dist, percentage, percentage_section_ID
+
+
+def greedy_selection_section_based_intro_conc_logical(paper_id, doc_sent_list, abstract_sent_list, section_lens,
+                                                      sections_text,
+                                                      summary_size, doc_section_list=None):
+    def _rouge_clean(s):
+        return re.sub(r'[^a-zA-Z0-9 ]', '', s)
+
+    def get_section_idx(index):
+        section = 0
+        for idx, s in enumerate(section_indeces):
+            if index > s:
+                section = idx
+            if index < s:
+                break
+        return section
+
+    def is_idx_in_sections(section_idx, checked_idx):
+        for sect_idx, sect_number in enumerate(section_idx):
+            if sect_number < len(section_lens):
+                if checked_idx >= section_indeces[sect_number] \
+                        and checked_idx < section_indeces[sect_number + 1]:
+                    return True
+            else:
+                if checked_idx >= section_indeces[sect_number]:
+                    return True
+        return False
+
+    def is_idx_in_sectionIDs(section_ids, checked_idx):
+
+        for sect_id in section_ids:
+            if doc_section_list[checked_idx] == sect_id:
+                return True
+        return False
+
+    def get_eligible_sections(fetch_sections):
+        out = []
+        debugged = False
+        for sect in fetch_sections:
+
+            if sect == 'abstract':
+                jump = False
+                for kw in ABS_KWs:
+                    for j, sect_heading in enumerate(sections_text):
+                        if kw.lower() in sect_heading:
+                            out.append(j)
+                            jump = True
+                            break
+                    if jump:
+                        break
+
+            if sect == 'introduction':
+
+                jump = False
+                for kw in INTRO_KWs:
+                    for j, sect_heading in enumerate(sections_text):
+                        if kw.lower() in sect_heading:
+                            out.append(j)
+                            jump = True
+                            break
+                    if jump:
+                        break
+
+            if sect == 'conclusion':
+                jump = False
+                for kw in CONC_KWs:
+                    for j, sect_heading in enumerate(sections_text):
+                        if kw.lower() in sect_heading:
+                            out.append(j)
+                            jump = True
+                            break
+                    if jump:
+                        break
+
+        if len(out) == 0:
+            out.append(0)
+            if section_indeces[1] - section_indeces[0] < 2:
+                out.extend([0,1])
+                debugged = True
+
+        return out, debugged
+
+    def get_eligible_section_ids(fetch_sections):
+        out = []
+        for sect in fetch_sections:
+            # if sect == 4:
+            #     continue
+            # else:
+            out.append(sect)
+        return out
+
+    def is_idx_out_of_sect(checked_idx):
+        pass
+
+    sections_text = [s.lower() for s in sections_text]
+    doc_sent_list = np.array(doc_sent_list, dtype=object)
+    section_indeces = [sum(section_lens[:i]) for i in range(len(section_lens))]
+    section_indeces = [section_indeces[0]] + [s for s in section_indeces[1:]] + [sum(section_lens[:len(section_lens)])]
+    picked_sent_intro_conc = 0
+    max_rouge = 0.0
+
+    abstract = sum(abstract_sent_list, [])
+    abstract = _rouge_clean(' '.join(abstract)).split()
+    sents = [_rouge_clean(' '.join(s)).split() for s in doc_sent_list]
+    evaluated_1grams = [_get_word_ngrams(1, [sent]) for sent in sents]
+    reference_1grams = _get_word_ngrams(1, [abstract])
+    reference_2grams = _get_word_ngrams(2, [abstract])
+    evaluated_2grams = [_get_word_ngrams(2, [sent]) for sent in sents]
+
+    selected = []
+    selected_sents_dist = {}
+    for idx, len_sect in enumerate(section_lens):
+        selected_sents_dist[idx] = 0
+
+    if doc_section_list is not None:
+        selected_sents_dist_sectionIDs = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
+
+    get_eligible_parts = get_eligible_sections
+    # eligible_parts_args = ['abstract', 'introduction']
+    eligible_parts_args = ['introduction', 'conclusion']
+    is_idx_in_global = is_idx_in_sections
+
+    # if doc_section_list is not None:
+    #     get_eligible_parts = get_eligible_section_ids
+    #     eligible_parts_args = [0]
+    #     is_idx_in_global = is_idx_in_sectionIDs
+
+    eligible_sections_intro_conc, debugged = get_eligible_parts(eligible_parts_args)
+
+
+    # print(eligible_sections_intro_conc)
+    for s in range(summary_size - (5 * (summary_size) // 10)):
+        cur_max_rouge = max_rouge
+        cur_id = -1
+        for i in range(len(sents)):
+            # if (i in selected or not is_idx_in_global(eligible_sections_intro_conc, i) or is_idx_out_of_sect(i, )):
+            if (i in selected or not is_idx_in_global(eligible_sections_intro_conc, i)):
+                continue
+            c = selected + [i]
+            candidates_1grams = [evaluated_1grams[idx] for idx in c]
+            candidates_1grams = set.union(*map(set, candidates_1grams))
+            candidates_2grams = [evaluated_2grams[idx] for idx in c]
+            candidates_2grams = set.union(*map(set, candidates_2grams))
+            rouge_1 = cal_rouge(candidates_1grams, reference_1grams)['f']
+            rouge_2 = cal_rouge(candidates_2grams, reference_2grams)['f']
+            rouge_score = rouge_1 + rouge_2
+            if rouge_score >= cur_max_rouge:
+                cur_max_rouge = rouge_score
+                cur_id = i
+            # elif rouge_score + 0.01 >= cur_max_rouge:
+            #     cur_id = i
+        if (cur_id == -1):
+            break
+
+        selected.append(cur_id)
+        max_rouge = cur_max_rouge
+        selected_sents_dist[get_section_idx(cur_id)] += 1
+        if doc_section_list is not None:
+            selected_sents_dist_sectionIDs[str(doc_section_list[cur_id])] += 1
+        picked_sent_intro_conc += 1
+
+    selected = sorted(selected)
+    selected_intro_conc = selected.copy()
+
+    if len(selected_intro_conc) < (summary_size - ((7 * summary_size) // 10)):
+        # sampling_sections = [0, 1, 2, 3]
+        # import pdb;pdb.set_trace()
+        sampling_sections = [x for x in range(len(sections_text))]
+    else:
+        # sampling_sections = [1, 2, 3]
+        sampling_sections = [x for x in range(len(sections_text))][1:]
+
+
+
+    if len(sampling_sections) == 0:
+        sampling_sections, debugged = get_eligible_parts(['abstract', 'introduction', 'conclusion'])
+
+    # expand the summary sentences, select 2 expandable sentences for each summary sentence
+    selected_samples = list()
+    for i_intro in selected_intro_conc:
+        selected = list()
+        max_rouge = 0.0
+        reference_1grams = _get_word_ngrams(1, [doc_sent_list[i_intro]])
+        reference_2grams = _get_word_ngrams(2, [doc_sent_list[i_intro]])
+
+        for s in range(((summary_size - picked_sent_intro_conc) // picked_sent_intro_conc)):
+            cur_max_rouge = max_rouge
+            cur_id = -1
+            for i in range(len(sents)):
+                if i in selected:
+                    continue
+                if (i in selected_samples):
+                    continue
+                if (i in selected_intro_conc):
+                    continue
+                if (not is_idx_in_global(sampling_sections, i)):
+                    continue
+
+                c = selected + [i]
+                candidates_1grams = [evaluated_1grams[idx] for idx in c]
+                candidates_1grams = set.union(*map(set, candidates_1grams))
+
+                candidates_2grams = [evaluated_2grams[idx] for idx in c]
+                candidates_2grams = set.union(*map(set, candidates_2grams))
+
+                rouge_1 = cal_rouge(candidates_1grams, reference_1grams)['f']
+                rouge_2 = cal_rouge(candidates_2grams, reference_2grams)['f']
+
+                rouge_score = rouge_1 + rouge_2
+                if rouge_score >= cur_max_rouge:
+                    cur_max_rouge = rouge_score
+                    cur_id = i
+
+            if cur_id == -1:
+                break
+
+            selected.append(cur_id)
+            max_rouge = cur_max_rouge
+            selected_sents_dist[get_section_idx(cur_id)] += 1
+            if doc_section_list is not None:
+                selected_sents_dist_sectionIDs[str(doc_section_list[cur_id])] += 1
+        for s in selected:
+            selected_samples.append(s)
+            if len(selected_samples) + len(selected_intro_conc) == summary_size:
+                break
+        if len(selected_samples) + len(selected_intro_conc) == summary_size:
+            break
+
+    selected_final = selected_samples.copy() + selected_intro_conc.copy()
+
+    if len(selected_final) < summary_size:
+        selected_samples = list()
+        for i_intro in selected_intro_conc:
+            selected = list()
+            max_rouge = 0.0
+            reference_1grams = _get_word_ngrams(1, [doc_sent_list[i_intro]])
+            reference_2grams = _get_word_ngrams(2, [doc_sent_list[i_intro]])
+
+            for s in range(((summary_size - picked_sent_intro_conc) // picked_sent_intro_conc) + 1):
+                cur_max_rouge = max_rouge
+                cur_id = -1
+                for i in range(len(sents)):
+                    if i in selected:
+                        continue
+                    if (i in selected_samples):
+                        continue
+                    if (i in selected_final):
+                        continue
+                    try:
+                        if (not is_idx_in_global(sampling_sections, i)):
+                            continue
+                    except:
+                        import pdb;pdb.set_trace()
+                    c = selected + [i]
+                    candidates_1grams = [evaluated_1grams[idx] for idx in c]
+                    candidates_1grams = set.union(*map(set, candidates_1grams))
+
+                    candidates_2grams = [evaluated_2grams[idx] for idx in c]
+                    candidates_2grams = set.union(*map(set, candidates_2grams))
+
+                    rouge_1 = cal_rouge(candidates_1grams, reference_1grams)['f']
+                    rouge_2 = cal_rouge(candidates_2grams, reference_2grams)['f']
+
+                    rouge_score = rouge_1 + rouge_2
+                    if rouge_score >= cur_max_rouge:
+                        cur_max_rouge = rouge_score
+                        cur_id = i
+
+                if cur_id == -1:
+                    break
+
+                selected.append(cur_id)
+                max_rouge = cur_max_rouge
+                selected_sents_dist[get_section_idx(cur_id)] += 1
+                if doc_section_list is not None:
+                    selected_sents_dist_sectionIDs[str(doc_section_list[cur_id])] += 1
+
+            for s in selected:
+                selected_samples.append(s)
+                if len(selected_samples) + len(selected_final) == summary_size:
+                    break
+            if len(selected_samples) + len(selected_final) == summary_size:
+                break
+
+        selected_final += selected_samples
+    heading_dict = {}
+    for heading, count in zip(sections_text, selected_sents_dist.values()):
+        heading_dict[heading] = count
+    selected_sents_dist_5labels = transfer_to_5label(heading_dict)
+
+    percentage = {}
+    for k, v in selected_sents_dist_5labels.items():
+        try:
+            percentage[k] = v / sum(selected_sents_dist_5labels.values())
+        except:
+            percentage[k] = v / summary_size
+
+    if doc_section_list is not None:
+        percentage_section_ID = {}
+        for k, v in selected_sents_dist_sectionIDs.items():
+            try:
+                percentage_section_ID[k] = v / sum(selected_sents_dist_sectionIDs.values())
+            except Exception as e:
+                # logger.error('Failed since: ' + str(e))
+                percentage_section_ID[k] = v / summary_size
+    # if debugged:
+    #     import pdb;pdb.set_trace()
+    # oracle = ''
+    # for pred in sorted(selected_final):
+    #     oracle += ' '.join(doc_sent_list[pred])
+    #     oracle += ' '
+    # print(evaluate_rouge([oracle.strip()], [' '.join([' '.join(g) for g in abstract_sent_list])]))
     return sorted(selected_final), selected_sents_dist, percentage, percentage_section_ID

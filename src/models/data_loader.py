@@ -62,9 +62,15 @@ class Batch(object):
             pre_tgt = [x[1] for x in data]
             pre_segs = [x[2] for x in data]
             pre_clss = [x[3] for x in data]
-            pre_src_sent_labels = [x[4] for x in data]
+            pre_src_sent_rg = [x[4] for x in data]
             pre_sent_labels = [x[5] for x in data]
+
             if not is_test:
+
+                pre_src_intro = [x[12] for x in data]
+                pre_intro_clss = [x[13] for x in data]
+                pre_intro_sent_labels = [x[14] for x in data]
+
                 sent_sect_labels = [x[6] for x in data]
                 sent_sect_headings = [x[9] for x in data]
 
@@ -75,38 +81,35 @@ class Batch(object):
                 # labelize_str_convert(sent_sect_labels)
                 labelize(sent_sect_labels, sent_sect_headings=sent_sect_headings, paper_id=paper_id)
             else:
-                if is_test:
-                    sent_sect_labels = [x[8] for x in data]
-                    # labelize_str_convert(sent_sect_labels)
-                    sent_sect_headings = [x[11] for x in data]
+                pre_src_intro = [x[15] for x in data]
+                pre_intro_clss = [x[16] for x in data]
+                pre_intro_sent_labels = [x[17] for x in data]
 
-                    labelize(sent_sect_labels, sent_sect_headings=sent_sect_headings)
-                    paper_id = [x[9] for x in data]
-                    # section_rg = [x[10] for x in data]
+                sent_sect_labels = [x[8] for x in data]
+                # labelize_str_convert(sent_sect_labels)
+                sent_sect_headings = [x[11] for x in data]
+
+                labelize(sent_sect_labels, sent_sect_headings=sent_sect_headings)
+                paper_id = [x[9] for x in data]
+                # section_rg = [x[10] for x in data]
 
             src = torch.tensor(self._pad(pre_src, 0))
+            src_intro = torch.tensor(self._pad(pre_src_intro, 0))
             tgt = torch.tensor(self._pad(pre_tgt, 0))
 
             segs = torch.tensor(self._pad(pre_segs, 0))
 
             mask_src = ~(src == self.PAD_ID)
+            mask_src_intro = ~(src_intro == self.PAD_ID)
             mask_tgt = ~(tgt == self.PAD_ID)
 
             clss = torch.tensor(self._pad(pre_clss, -1))
-            try:
-                src_sent_labels = torch.tensor(self._pad(pre_src_sent_labels, 0))
-                # import pdb;pdb.set_trace()
-            except:
-                import pdb;pdb.set_trace()
-                print(paper_id)
+            intro_clss = torch.tensor(self._pad(pre_intro_clss, -1))
 
-                # for p in range(len(pre_clss[0])):
-                #     rg.append(1)
-                # src_sent_labels = torch.tensor(self._pad(rg, 0))
-                # import pdb;pdb.set_trace()
+            src_sent_rg = torch.tensor(self._pad(pre_src_sent_rg, 0))
 
             sent_labels = torch.tensor(self._pad(pre_sent_labels, 0))
-            # section_rg = torch.tensor(section_rg)
+            intro_sent_labels = torch.tensor(self._pad(pre_intro_sent_labels, 0))
 
             # for int identifier
             sent_sect_labels = torch.tensor(self._pad(sent_sect_labels, 0))
@@ -117,16 +120,26 @@ class Batch(object):
             mask_cls = ~(clss == -1)
             clss[clss == -1] = 0
 
+            mask_intro_cls = ~(intro_clss == -1)
+            intro_clss[intro_clss == -1] = 0
+
+
             setattr(self, 'clss', clss.to(device))
+            setattr(self, 'intro_clss', intro_clss.to(device))
             setattr(self, 'mask_cls', mask_cls.to(device))
-            setattr(self, 'src_sent_labels', src_sent_labels.to(device))
+            setattr(self, 'mask_intro_cls', mask_intro_cls.to(device))
+
+            setattr(self, 'src_sent_rg', src_sent_rg.to(device))
             setattr(self, 'sent_labels', sent_labels.to(device))
+            setattr(self, 'intro_sent_labels', intro_sent_labels.to(device))
             # setattr(self, 'section_rg', section_rg.to(device))
 
             setattr(self, 'src', src.to(device))
+            setattr(self, 'src_intro', src_intro.to(device))
             setattr(self, 'tgt', tgt.to(device))
             setattr(self, 'segs', segs.to(device))
             setattr(self, 'mask_src', mask_src.to(device))
+            setattr(self, 'mask_src_intro', mask_src_intro.to(device))
             setattr(self, 'mask_tgt', mask_tgt.to(device))
 
             # for int identifier
@@ -158,10 +171,6 @@ class Batch(object):
 
                 setattr(self, 'sent_sections_txt', sent_sections_txt)
                 setattr(self, 'sent_sect_wise_rg', sent_sect_wise_rg)
-
-                # sent_sect_labels = [x[-2] for x in data]
-                # setattr(self, 'sent_sect_labels', sent_sect_labels)
-
 
     def __len__(self):
         return self.batch_size
@@ -202,7 +211,7 @@ def load_dataset(args, corpus_type, shuffle):
         # pts = [pts[-1]]
 
 
-    elif corpus_type=='train':
+    else:
         pts = sorted(glob.glob(args.bert_data_path + '/' + corpus_type + '.*.pt'), reverse=True)
         import random
         random.seed(888)
@@ -315,13 +324,16 @@ class DataIterator(object):
 
     def preprocess(self, ex, is_test):
         src = ex['src']
+        src_intro = ex['src_intro']
         tgt = ex['tgt'][:self.args.max_tgt_len][:-1] + [2]
-        src_sent_labels = ex['src_sent_labels']
+        src_sent_rg = ex['src_sent_rg']
         sent_labels = ex['sent_labels']
+        intro_sent_labels = ex['intro_labels']
         segs = ex['segs']
         if (not self.args.use_interval):
             segs = [0] * len(segs)
         clss = ex['clss']
+        intro_clss = ex['intro_cls_ids']
         src_txt = ex['src_txt']
 
         if "sent_numbers" in ex.keys():
@@ -348,27 +360,33 @@ class DataIterator(object):
         # if is_test:
         #     paper_id = ex['paper_id']
         sent_sect_labels = ex['sent_sect_labels']
-        if len(sent_sect_labels) != len(src_sent_labels):
+        if len(sent_sect_labels) != len(src_sent_rg):
             import pdb;
             pdb.set_trace()
 
         end_id = [src[-1]]
         src = src[:-1][:self.args.max_pos - 1] + end_id
+        src_intro = src_intro[:-1][:self.args.max_pos_intro - 1] + end_id
         segs = segs[:self.args.max_pos]
         max_sent_id = bisect.bisect_left(clss, self.args.max_pos)
-        src_sent_labels = src_sent_labels[:max_sent_id]
+        max_sent_id_intro = bisect.bisect_left(intro_clss, self.args.max_pos_intro)
+        src_sent_rg = src_sent_rg[:max_sent_id]
         sent_labels = sent_labels[:max_sent_id]
+        intro_sent_labels = intro_sent_labels[:max_sent_id_intro]
         clss = clss[:max_sent_id]
+        intro_clss = intro_clss[:max_sent_id_intro]
         src_txt = src_txt[:max_sent_id]
         if sent_sections_txt is not None:
             sent_sections_txt = sent_sections_txt[:max_sent_id]
         sent_sect_labels = sent_sect_labels[:max_sent_id]
 
         # import pdb;pdb.set_trace()
+
         if (is_test):
-            return src, tgt, segs, clss, src_sent_labels, sent_labels, src_txt, tgt_txt, sent_sect_labels, paper_id, section_rg, sent_sections_txt, sent_sect_wise_rg, sent_numbers, sent_token_count
+            return src, tgt, segs, clss, src_sent_rg, sent_labels, src_txt, tgt_txt, sent_sect_labels, paper_id, section_rg, sent_sections_txt, sent_sect_wise_rg, \
+                   sent_numbers, sent_token_count, src_intro, intro_clss, intro_sent_labels
         else:
-            return src, tgt, segs, clss, src_sent_labels, sent_labels, sent_sect_labels, paper_id, src_txt, sent_sections_txt, sent_numbers, sent_token_count
+            return src, tgt, segs, clss, src_sent_rg, sent_labels, sent_sect_labels, paper_id, src_txt, sent_sections_txt, sent_numbers, sent_token_count, src_intro, intro_clss, intro_sent_labels
 
     def batch_buffer(self, data, batch_size):
         minibatch, size_so_far = [], 0

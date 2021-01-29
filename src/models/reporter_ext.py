@@ -380,7 +380,7 @@ class Statistics(object):
             # foveral, f11, f12, f13, f14, f15 = self.self_get_f1_sect()
             logger.info(
                 (
-                    "Step %s; mse_sent: %4.2f (%4.2f/%d) + xent_sect: %4.2f = mlt: %4.2f (%4.4f, %4.4f) (RMSE-sent: %4.4f, ACC: %4.4f) "
+                    "Step %s; xent_intro: %4.2f (%4.2f/%d) + xent_src: %4.2f = mlt: %4.2f (%4.4f, %4.4f) (RMSE-sent: %4.4f, ACC: %4.4f) "
                     # "F1-sect: %4.2f ([0] %4.2f, "
                     # "[1] %4.2f, [2] %4.2f, [3] %4.2f, [4] %4.2f)); " +
                     "lr: %7.7f; %3.0f docs/s; %6.0f sec")
@@ -399,7 +399,7 @@ class Statistics(object):
                    time.time() - start))
         else:
             logger.info(
-                ("Step %s; mse_sent: %4.2f (%4.2f/%d), (RMSE-sent:%4.4f); " +
+                ("Step %s; xent_intro: %4.2f (%4.2f/%d), (RMSE-sent:%4.4f); " +
                  "lr: %7.7f; %3.0f docs/s; %6.0f sec")
                 % (step_fmt,
                    self.total_loss(),

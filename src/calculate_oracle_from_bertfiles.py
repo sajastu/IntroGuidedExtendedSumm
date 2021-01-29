@@ -51,15 +51,19 @@ for se in [args.set]:
     avg_sents_len = {}
     sent_true_labels = collections.defaultdict(dict)
     debug_sent_lists = []
+    paper_ids = set()
     for j, f in tqdm(enumerate(glob.glob(os.path.join(PT_DIRS, se + '*.pt'))), total=len(glob.glob(os.path.join(PT_DIRS, se + '*.pt')))):
         instances = torch.load(f)
         for inst_idx, instance in enumerate(instances):
             sentences = instance['src_txt']
             sent_labels = instance['sent_labels']
 
-            rg_scores = instance['src_sent_labels']
+            rg_scores = instance['src_sent_rg']
             gold_summary = instance['tgt_txt'].replace('<q>', '')
             paper_id = instance['paper_id'].split('___')[0]
+            if paper_id == "astro-ph9805315":
+                print(instance['paper_id'])
+            paper_ids.add(paper_id)
             sent_true_labels[f][instance['paper_id']] = sent_labels
             # import pdb;pdb.set_trace()
             new_labels = []
@@ -81,7 +85,6 @@ for se in [args.set]:
                         oracles[paper_id] += s
                         oracles[paper_id] += ' '
                 # else:
-
             if paper_id not in avg_sents_len:
                 avg_sents_len[paper_id] = instance_picked_up
                 # sent_true_labels[paper_id] = sent_labels
@@ -93,7 +96,6 @@ for se in [args.set]:
                 # sent_true_labels[paper_id] += sent_labels
                 # if avg_sents_len[paper_id] > 10:
             golds[paper_id] = gold_summary
-
     # check_path_existense("sent_labels_files/pubmedL/")
     # pickle.dump(sent_true_labels, open("sent_labels_files/pubmedL/" + args.set + ".labels.p", "wb"))
     # import pdb;pdb.set_trace()
@@ -103,6 +105,13 @@ for se in [args.set]:
     oracles = dict(sorted(oracles.items()))
     golds = dict(sorted(golds.items()))
     avg_sents_len = dict(sorted(avg_sents_len.items()))
+
+    paper_ids = list(paper_ids)
+
+    with open(f"{se}_paper_ids.txt", mode='w') as FF:
+        for p in paper_ids:
+            FF.write(p)
+            FF.write('\n')
 
     print('avg oracle sentence number: {}'.format(statistics.mean(avg_sents_len.values())))
     print('median oracle sentence number: {}'.format(statistics.median(avg_sents_len.values())))

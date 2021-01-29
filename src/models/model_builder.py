@@ -4,15 +4,12 @@ import torch
 import torch.nn as nn
 # from pytorch_transformers import BertModel, BertConfig
 from torch.nn.init import xavier_uniform_
-from torch.utils import checkpoint
 # from torch.autograd import Variable
-from transformers import BertModel, BertConfig, LongformerModel
-
+from transformers import BertModel, BertConfig, LongformerModel, LongformerConfig
 # from models.pointer_generator.PG_transformer import PointerGeneratorTransformer
 from models.decoder import TransformerDecoder
 from models.encoder import ExtTransformerEncoder
 from models.optimizers import Optimizer
-from models.uncertainty_loss import UncertaintyLoss
 
 
 def build_optim(args, model, checkpoint):
@@ -135,23 +132,32 @@ class Bert(nn.Module):
             if large:
                 self.model = LongformerModel.from_pretrained('allenai/longformer-large-4096', cache_dir=temp_dir)
             else:
+                # configuration = LongformerConfig()
+                # model = LongformerModel(configuration)
+                # configuration = model.config
+                # import pdb;pdb.set_trace()
                 self.model = LongformerModel.from_pretrained('allenai/longformer-base-4096', cache_dir=temp_dir)
+                self.model.config.gradient_checkpointing = True
+                self.model = LongformerModel.from_pretrained('allenai/longformer-base-4096', cache_dir=temp_dir, config=self.model.config)
+
+
 
         self.model_name = model_name
         self.finetune = finetune
 
-
     def forward(self, x, segs, mask_src, mask_cls, clss):
         if (self.finetune):
 
-            if self.model_name =='bert' or self.model_name =='scibert':
+            if self.model_name == 'bert' or self.model_name == 'scibert':
                 top_vec, _ = self.model(x, attention_mask=mask_src, token_type_ids=segs)
 
-            elif self.model_name=='longformer':
+            elif self.model_name == 'longformer':
+                # import pdb;
+                # pdb.set_trace()
                 global_mask = torch.zeros(mask_src.shape, dtype=torch.long, device='cuda').unsqueeze(0)
-                global_mask[:,:,clss.long()] = 1
+                global_mask[:, :, clss.long()] = 1
                 global_mask = global_mask.squeeze(0)
-                top_vec, _ = self.model(x, attention_mask=mask_src.long(), global_attention_mask=global_mask)
+                top_vec = self.model(x, attention_mask=mask_src.long(), global_attention_mask=global_mask)['last_hidden_state']
 
         else:
             self.eval()
@@ -163,136 +169,163 @@ class Bert(nn.Module):
                     global_mask = torch.zeros(mask_src.shape, dtype=torch.long, device='cuda').unsqueeze(0)
                     global_mask[:, :, clss.long()] = 1
                     global_mask = global_mask.squeeze(0)
+                    top_vec = self.model(x, attention_mask=mask_src.long(), global_attention_mask=global_mask)[
+                        'last_hidden_state']
 
-                    top_vec, _ = self.model(x, attention_mask=mask_src.long(), global_attention_mask=global_mask)
+        return top_vec
+
+
+class BertVanilla(nn.Module):
+    def __init__(self, large, model_name, temp_dir, finetune=False):
+        super(BertVanilla, self).__init__()
+
+        if model_name == 'bert':
+            if (large):
+                self.model = BertModel.from_pretrained('bert-large-uncased', cache_dir=temp_dir)
+            else:
+                self.model = BertModel.from_pretrained('bert-base-uncased', cache_dir=temp_dir)
+
+        elif model_name == 'scibert':
+            self.model = BertModel.from_pretrained('allenai/scibert_scivocab_uncased', cache_dir=temp_dir)
+
+        elif model_name == 'longformer':
+            if large:
+                self.model = LongformerModel.from_pretrained('allenai/longformer-large-4096', cache_dir=temp_dir)
+            else:
+                self.model = LongformerModel.from_pretrained('allenai/longformer-base-4096', cache_dir=temp_dir)
+                self.model.config.gradient_checkpointing = True
+                self.model = LongformerModel.from_pretrained('allenai/longformer-base-4096', cache_dir=temp_dir,
+                                                             config=self.model.config)
+
+                # self.model = LongformerModel.from_pretrained('allenai/longformer-base-4096', cache_dir=temp_dir)
+
+        self.model_name = model_name
+        self.finetune = finetune
+
+    def forward(self, x, segs, mask_src, mask_cls, clss):
+        if (self.finetune):
+            if self.model_name == 'bert' or self.model_name == 'scibert':
+                cls_vec, _ = self.model(x, attention_mask=mask_src, token_type_ids=segs)
+
+            elif self.model_name == 'longformer':
+
+                global_mask = torch.zeros(mask_src.shape, dtype=torch.long, device='cuda').unsqueeze(0)
+                global_mask[:, :, [0]] = 1 # <s> or [cls] token
+                global_mask = global_mask.squeeze(0)
+                # import pdb;pdb.set_trace()
+                import pdb;
+                pdb.set_trace()
+
+                top_vec = self.model(x, attention_mask=mask_src.long(), global_attention_mask=global_mask)['last_hidden_state']
+
+        else:
+            self.eval()
+            with torch.no_grad():
+                if self.model_name == 'bert' or self.model_name == 'scibert':
+                    top_vec, _ = self.model(x, attention_mask=mask_src, token_type_ids=segs)
+
+                elif self.model_name == 'longformer':
+                    global_mask = torch.zeros(mask_src.shape, dtype=torch.long, device='cuda').unsqueeze(0)
+                    global_mask[:, :, [0]] = 1  # <s> or [cls] token
+                    global_mask = global_mask.squeeze(0)
+                    top_vec = self.model(x, attention_mask=mask_src.long(), global_attention_mask=global_mask)[
+                        'last_hidden_state']
 
         return top_vec
 
 
 class ExtSummarizer(nn.Module):
-    def __init__(self, args, device, checkpoint, is_joint=True, rg_predictor=False):
+    def __init__(self, args, device, checkpoint, intro_cls=True, intro_sents_cls=False, intro_top_cls=False, num_intro_sample=5):
         super(ExtSummarizer, self).__init__()
-        self.is_joint = is_joint
-        self.sentence_encoder = SentenceEncoder(args, device, checkpoint)
-        self.sentence_predictor = SentenceExtLayer()
-        self.rg_predictor = rg_predictor
-        # self.decoder = PointerGeneratorTransformer()
-        if is_joint:
-            self.uncertainty_loss = UncertaintyLoss()
-            self.section_predictor = SectionExtLayer()
-            self.loss_sentence_picker = torch.nn.BCELoss(reduction='none')
-            self.loss_section_predictor = torch.nn.CrossEntropyLoss(reduction='none')
-
-
-        if not is_joint and not rg_predictor:
-            self.loss_sentence_picker = torch.nn.BCELoss(reduction='none')
-
-        if rg_predictor:
-            self.loss_sentence_picker = torch.nn.MSELoss(reduction='none')
-
         self.args = args
-        # for p in self.sentence_encoder.parameters():
-        #     if p.dim() > 1:
-        #         xavier_uniform_(p)
+        self.num_intro_sample = num_intro_sample
+        self.intro_cls = intro_cls
+        self.sentence_encoder = SentenceEncoder(args, device, checkpoint)
+        self.sentence_encoder_intro = SentenceEncoder(args, device, checkpoint)
+        self.sentence_predictor = SentenceExtLayer()
+        self.intro_sentence_predictor = SentenceExtLayer()
+        self.loss_sentence_picker = torch.nn.BCELoss(reduction='none')
+        self.loss_intro_sentence_picker = torch.nn.BCELoss(reduction='none')
+        self.intro_combiner = IntroSentenceCombiner(num_intro_sample)
+
+        if intro_cls:
+            self.intro_cls_encoder = BertVanilla(args.large, args.model_name, args.temp_dir, args.finetune_bert)
 
         if checkpoint is not None:
-            # if self.is_joint:
-            #     for p in self.section_predictor.parameters():
-            #         if p.dim() > 1:
-            #             xavier_uniform_(p)
-            #
-            # pretrained_dict = {k: v for k, v in checkpoint['model'].items() if k in self.state_dict()}
-            # pretrained_dict['section_predictor.wo_2.weight'] = self.state_dict()['section_predictor.wo_2.weight']
-            # pretrained_dict['section_predictor.wo_2.bias'] = self.state_dict()['section_predictor.wo_2.bias']
-            # self.load_state_dict(pretrained_dict, strict=True)
-            #
             self.load_state_dict(checkpoint['model'], strict=True)
-            # list = []
-            # for key, val in checkpoint['model'].items():
-            #     if key.startswith('bert.model'):
-            #         list.append(('sentence_encoder.' + key, val))
-            #     elif key.startswith('ext_layer'):
-            #         list.append(('sentence_encoder.' + key.replace('ext_layer','ext_transformer_layer'), val))
-            #     # elif key.startswith('sentence_encoder.ext_transformer_layer.wo'):
-            #     #     list.append((key.replace('sentence_encoder.ext_transformer_layer','sentence_predictor'), val))
-            # for j, (key, val) in enumerate(list):
-            #     if key.startswith('sentence_encoder.ext_transformer_layer.wo'):
-            #         list[j] = (key.replace('sentence_encoder.ext_transformer_layer','sentence_predictor'), val)
-            #
-            # # import pdb;pdb.set_trace()
-            # self.load_state_dict(dict(list), strict=True)
+
         else:
             for p in self.sentence_predictor.parameters():
                 if p.dim() > 1:
                     xavier_uniform_(p)
-            if self.is_joint:
-                for p in self.section_predictor.parameters():
-                    if p.dim() > 1:
-                        xavier_uniform_(p)
-
-
 
         self.to(device)
 
+    def _get_topN_sents_ids(self, p_id, intro_sents_score, mask_intro_cls, n):
+        """
+        :param intro_sents_score: tensor [B, CLS_LEN]
+        :param mask_intro_cls: tensor [B, CLS_LEN]
+        :param n: int N
+
+        :return: top_out tensor [B, N]
+        """
+        try:
+            vals, indices = intro_sents_score.topk(n, dim=1)
+        except:
+            import pdb;pdb.set_trace()
+
+        top_out = torch.zeros((mask_intro_cls.size(0), mask_intro_cls.size(1))).cuda()
+        top_out.scatter_(1, indices, 1.)
+        return top_out
+
+    def _get_top_representations(self, top_sent_mask, intro_source_sents_repr):
+        """
+        :param top_sent_mask: tensor [B (int), CLS_LEN (int)]:
+        :param intro_source_sents_repr: tensor [B (int), CLS_LEN (int)]:
+        :return: zero_out_repr: tensor [B (int), N (top_sents), EMB_DIM (int)]
+        """
+
+        zero_out_repr = top_sent_mask.unsqueeze(2).repeat(1, 1, intro_source_sents_repr.size(2)).cuda() * intro_source_sents_repr
+        zero_out_repr = zero_out_repr[top_sent_mask>0].view(intro_source_sents_repr.size(0), int(top_sent_mask.sum(dim=1)[0].item()), -1)
+        return zero_out_repr
 
 
-    def forward(self, src, segs, clss, mask_src, mask_cls, sent_bin_labels, sent_sect_labels, is_inference=False, return_encodings=False):
+    def forward(self, src, src_intro, segs, clss, intro_clss, mask_src, mask_src_intro, mask_cls, mask_intro_cls, sent_bin_labels, intro_sent_bin_labels, sent_sect_labels, p_id, is_inference=False,
+                return_encodings=False):
 
-        encoded = self.sentence_encoder(src, segs, clss, mask_src, mask_cls)
-        # output = self.decoder(encoded, tgt=torch.rand(size=(7,11,768)).cuda(), src=torch.rand(size=(7,20,768)).cuda())
+        source_sents_repr = self.sentence_encoder(src, segs, clss, mask_src, mask_cls)
+        intro_source_sents_repr = self.sentence_encoder_intro(src_intro, segs, intro_clss, mask_src_intro, mask_intro_cls)
 
-        sent_score = self.sentence_predictor(encoded, mask_cls)
+        # intro_repr = self.intro_cls_encoder(x=src_intro, segs=None, mask_src=mask_src_intro, mask_cls=mask_intro_cls, clss=intro_clss)
 
-        if self.is_joint:
-            sect_scores = self.section_predictor(encoded, mask_cls)
+        # intro_aware_repr = torch.cat((source_sents_repr, intro_repr.repeat(1, source_sents_repr.size(1), 1)), 2)
+        intro_sents_score = self.intro_sentence_predictor(intro_source_sents_repr, mask_intro_cls)
+        intro_repr_topN = self._get_top_representations(self._get_topN_sents_ids(p_id, intro_sents_score, mask_intro_cls, self.num_intro_sample), intro_source_sents_repr)
+        try:
+            src_intro_guided = self.intro_combiner(intro_repr_topN, source_sents_repr)
+        except:
+            import pdb;pdb.set_trace()
+        src_sents_score = self.sentence_predictor(src_intro_guided, mask_cls)
+        if self.intro_cls:
+            try:
+                loss = self.loss_sentence_picker(src_sents_score, sent_bin_labels.float())
+            except:
+                import pdb;pdb.set_trace()
+            intro_loss = self.loss_intro_sentence_picker(intro_sents_score, intro_sent_bin_labels.float())
+            loss = ((loss * mask_cls.float()).sum() / mask_cls.sum(dim=1)).sum()
+            loss_src = loss
+            intro_loss = ((intro_loss * mask_intro_cls.float()).sum() / mask_intro_cls.sum(dim=1)).sum()
+            if not is_inference:
+                loss = loss / loss.numel()
+                loss_src = loss
+                intro_loss = intro_loss / intro_loss.numel()
 
-            if self.args.alpha_mtl != -1:
-                loss_sent = self.loss_sentence_picker(sent_score, sent_bin_labels.float())
-                loss_sent = ((loss_sent * mask_cls.float()).sum() / mask_cls.sum(dim=1)).sum()
-                if not is_inference:
-                    loss_sent = loss_sent / loss_sent.numel()
-
-                loss_sect = self.loss_section_predictor(sect_scores.permute(0, 2, 1), sent_sect_labels)
-                loss_sect = ((loss_sect * mask_cls.float()).sum() / mask_cls.sum(dim=1)).sum()
-                if not is_inference:
-                    loss_sect = (loss_sect / loss_sect.numel())
-
-                loss = (self.args.alpha_mtl) * loss_sent + (1-(self.args.alpha_mtl)) * loss_sect
-
-            else:
-                loss, loss_sent, loss_sect = self.uncertainty_loss(sent_score, sent_bin_labels, sect_scores, sent_sect_labels, mask=mask_cls)
-
-            # factor0 = torch.div(1.0, self.uncertainty_loss._sigmas_sq[0])
-            # factor1 = torch.div(1.0, self.uncertainty_loss._sigmas_sq[1])
-            # out0 = torch.mul(factor0, sent_score)
-            # out1 = torch.mul(factor1, sect_scores)
-            return sent_score, sect_scores, mask_cls, loss, loss_sent, loss_sect
-
-        else:
-            if not self.rg_predictor:
-                try:
-                    loss = self.loss_sentence_picker(sent_score, sent_bin_labels.float())
-                except:
-                    import pdb;pdb.set_trace()
-                loss = ((loss * mask_cls.float()).sum() / mask_cls.sum(dim=1)).sum()
-                if not is_inference:
-                    loss = loss / loss.numel()
-
-            else:
-                loss = self.loss_sentence_picker(sent_score, sent_bin_labels.float())
-                loss = ((loss * mask_cls.float()).sum() / mask_cls.sum(dim=1)).sum()
-                if not is_inference:
-                    loss = loss / loss.numel()
-
-            # if is_inference:
-            #     return sent_score, mask_cls, loss, None, None, encoded
+            loss = (0.5*loss) + (0.5*intro_loss)
 
             if return_encodings:
-                return sent_score, mask_cls, loss, None, None, encoded
+                return src_sents_score, mask_cls, loss, None, None, source_sents_repr
 
-            return sent_score, mask_cls, loss, None, None
-
-
+            return src_sents_score, mask_cls, loss, intro_loss, loss_src
 
 
 class SentenceEncoder(nn.Module):
@@ -305,38 +338,24 @@ class SentenceEncoder(nn.Module):
                                                            args.ext_heads,
                                                            args.ext_dropout, args.ext_layers)
 
-        if args.max_pos > 512 and args.model_name=='bert':
+        if args.max_pos > 512 and args.model_name == 'bert':
             my_pos_embeddings = nn.Embedding(args.max_pos, self.bert.model.config.hidden_size)
-            import pdb;pdb.set_trace()
+            import pdb;
+            pdb.set_trace()
 
             my_pos_embeddings.weight.data[:512] = self.bert.model.embeddings.position_embeddings.weight.data
             my_pos_embeddings.weight.data[512:] = self.bert.model.embeddings.position_embeddings.weight.data[-1][None,
                                                   :].repeat(args.max_pos - 512, 1)
             self.bert.model.embeddings.position_embeddings = my_pos_embeddings
 
-
-        if args.max_pos > 4096 and args.model_name=='longformer':
-            my_pos_embeddings = nn.Embedding(args.max_pos+2, self.bert.model.config.hidden_size)
+        if args.max_pos > 4096 and args.model_name == 'longformer':
+            my_pos_embeddings = nn.Embedding(args.max_pos + 2, self.bert.model.config.hidden_size)
             my_pos_embeddings.weight.data[:4097] = self.bert.model.embeddings.position_embeddings.weight.data[:-1]
-            my_pos_embeddings.weight.data[4097:] = self.bert.model.embeddings.position_embeddings.weight.data[1:args.max_pos +2 - 4096]
+            my_pos_embeddings.weight.data[4097:] = self.bert.model.embeddings.position_embeddings.weight.data[
+                                                   1:args.max_pos + 2 - 4096]
             self.bert.model.embeddings.position_embeddings = my_pos_embeddings
 
-
         self.sigmoid = nn.Sigmoid()
-        # if checkpoint is not None:
-        #     import pdb;pdb.set_trace()
-        #     self.load_state_dict(checkpoint['model'], strict=True)
-
-        # else:
-        #     if args.param_init != 0.0:
-        #         for p in self.ext_transformer_layer.parameters():
-        #             p.data.uniform_(-args.param_init, args.param_init)
-        #     if args.param_init_glorot:
-        #         for p in self.ext_transformer_layer.parameters():
-        #             if p.dim() > 1:
-        #                 xavier_uniform_(p)
-
-        # self.to(device)
 
     def forward(self, src, segs, clss, mask_src, mask_cls):
         # self.eval()
@@ -353,27 +372,35 @@ class SentenceEncoder(nn.Module):
         return encoded_sent
 
 
+class IntroSentenceCombiner(nn.Module):
+    def __init__(self, n_input, n_output=1):
+        super(IntroSentenceCombiner, self).__init__()
+        self.flatten = nn.Flatten()
+        self.combiner1 = nn.Linear(n_input*768, n_output*768)
+        self.combiner2 = nn.Linear(2*768, 768)
+
+    def forward(self, x, y):
+        out = self.combiner1(self.flatten(x)).unsqueeze(1)
+        intro_aware_repr = torch.cat((y, out.repeat(1, y.size(1), 1)), 2)
+        intro_aware_repr = self.combiner2(intro_aware_repr)
+        # intro_aware_repr = self.combiner3(intro_aware_repr)
+
+        # intro_aware_repr_gate = self.filtering_gate(intro_aware_repr)
+        # intro_aware_repr = y * intro_aware_repr_gate
+
+        return intro_aware_repr
+
 class SentenceExtLayer(nn.Module):
-    def __init__(self):
+    def __init__(self,):
         super(SentenceExtLayer, self).__init__()
+        # self.combiner = nn.Linear(1536, 768)
         self.wo = nn.Linear(768, 1, bias=True)
         self.sigmoid = nn.Sigmoid()
-        #
-        # self.seq_model = nn.Sequential(
-        #     nn.Linear(768, 1, bias=True),
-        #     nn.Sigmoid()
-        # )
-
-    # def custom_sent_decider(self, module):
-    #     def custom_forward(*inputs):
-    #         output = module(inputs[0], inputs[1])
-    #         return output
-    #
-    #     return custom_forward
 
     def forward(self, x, mask):
         # sent_scores = self.seq_model(x)
-        # import pdb;pdb.set_trace()
+
+        # sent_scores = self.sigmoid(self.wo(self.combiner(x)))
         sent_scores = self.sigmoid(self.wo(x))
 
         # modules = [module for k, module in self.seq_model._modules.items()]
@@ -405,8 +432,7 @@ class AbsSummarizer(nn.Module):
         super(AbsSummarizer, self).__init__()
         self.args = args
         self.device = device
-        self.bert = Bert(args.large, args.model_name, args.temp_dir, args.finetune_bert)
-        self.sentence_encoder = SentenceEncoder(args, device, checkpoint)
+        self.bert = Bert(args.large, args.temp_dir, args.finetune_bert)
 
         if bert_from_extractive is not None:
             self.bert.model.load_state_dict(
@@ -464,20 +490,7 @@ class AbsSummarizer(nn.Module):
         self.to(device)
 
     def forward(self, src, tgt, segs, clss, mask_src, mask_tgt, mask_cls):
-        top_vec = self.bert(src, segs, mask_src, mask_cls, clss)
-
-        # src = src[torch.arange(top_vec.size(0)).unsqueeze(1), clss.long()]
-        # src = src * mask_cls[:, :, None].float()
-        # encoded_sent = self.ext_transformer_layer(sents_vec, mask_cls)
-
+        top_vec = self.bert(src, segs, mask_src)
         dec_state = self.decoder.init_decoder_state(src, top_vec)
-        tgt = torch.rand(size=(1, 9, 768))
-        decoder_outputs, attn_enc_dec, state = self.decoder(tgt[:, :-1], top_vec, clss, dec_state)
-        return decoder_outputs, attn_enc_dec, None
-
-
-
-
-
-
-
+        decoder_outputs, state = self.decoder(tgt[:, :-1], top_vec, dec_state)
+        return decoder_outputs, None

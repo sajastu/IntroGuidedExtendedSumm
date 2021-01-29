@@ -44,6 +44,7 @@ if __name__ == '__main__':
     parser.add_argument("-test_batch_size", default=1, type=int)
 
     parser.add_argument("-max_pos", default=512, type=int)
+    parser.add_argument("-max_pos_intro", default=1536, type=int)
     parser.add_argument("-use_interval", type=str2bool, nargs='?',const=True,default=True)
     parser.add_argument("-large", type=str2bool, nargs='?',const=True,default=False)
     parser.add_argument("-load_from_extractive", default='', type=str)
@@ -124,6 +125,9 @@ if __name__ == '__main__':
 
     parser.add_argument("-train_from", default='')
     parser.add_argument("-exp_set", default='')
+    parser.add_argument("-gd_cells_rg", default='', required=True)
+    parser.add_argument("-gd_cell_step", default='', required=True)
+    parser.add_argument("-gd_cell_recall", default='', required=False)
     parser.add_argument("-fold_base_dir", default='')
     parser.add_argument("-report_rouge", type=str2bool, nargs='?',const=True,default=True)
     parser.add_argument("-block_trigram", type=str2bool, nargs='?', const=True, default=True)
@@ -131,6 +135,7 @@ if __name__ == '__main__':
 
     parser.add_argument("-section_prediction", action='store_true')
     parser.add_argument("-rg_predictor", action='store_true')
+    parser.add_argument("-intro_cls", action='store_true')
 
 
     ############
@@ -173,7 +178,8 @@ if __name__ == '__main__':
     elif (args.task == 'ext'):
         if (args.mode == 'train'):
             # print('joint: ' + str(args.section_prediction))
-            train_ext(args, device_id, args.section_prediction)
+            # train_ext(args, device_id, args.section_prediction)
+            train_ext(args, device_id, intro_cls=args.intro_cls)
         elif (args.mode == 'validate'):
             validate_ext(args, device_id)
         if (args.mode == 'test'):

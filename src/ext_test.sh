@@ -6,34 +6,40 @@
 ######### Data #########
 #########################
 
-BERT_DIR=/disk1/sajad/datasets/sci/longsumm/bert-files/2500-segmented-seqLabelled-30/
+#BERT_DIR=/disk1/sajad/datasets/sci/arxivL//bert-files/2048-segmented-intro1536-15-introConc-updated/
+BERT_DIR=/disk1/sajad/datasets/sci/arxivL/bert-files/2048-segmented-intro1536-15-introConc-updated/
 
 
 #########################
 ######### MODELS#########
 #########################
 
-MODEL_PATH=/disk1/sajad/sci-trained-models/presum/LSUM-2500-segmented-sectioned-multi50-classi-v1/
+#MODEL_PATH=/disk1/sajad/sci-trained-models/presum/arxivL-2500-segmented-introG1536/
+MODEL_PATH=/disk1/sajad/sci-trained-models/presum/pubmedL-2048-segmented-introG2048Baseline-IntroConc/
+#/disk1/sajad/sci-trained-models/presum/pubmedL-2048-segmented-introG2048Baseline-IntroConc/
 
-CHECKPOINT=$MODEL_PATH/Recall_BEST_model_s63000_0.4910.pt
+CHECKPOINT=$MODEL_PATH/model_step_50000.pt
 
 
 
 
 
-export CUDA_VISIBLE_DEVICES=0,1
+export CUDA_VISIBLE_DEVICES=0
 
-MAX_POS=2500
+MAX_POS=2048
+MAX_POS_INTRO=2048
+
+RG_CELL=H90:J90
 
 mkdir -p ../results/$(echo $MODEL_PATH | cut -d \/ -f 6)
-for ST in val
+for ST in test
 do
     RESULT_PATH=../results/$(echo $MODEL_PATH | cut -d \/ -f 6)/$ST
 #    RESULT_PATH=../results/$(echo $MODEL_PATH | cut -d \/ -f 6)/abs-set/$ST.official
 #    RESULT_PATH=/home/sajad/datasets/longsum/submission_files/
     python3 train.py -task ext \
                     -mode test \
-                    -test_batch_size 3000 \
+                    -test_batch_size 10000 \
                     -bert_data_path $BERT_DIR \
                     -log_file ../logs/val_ext \
                     -model_path $MODEL_PATH \
@@ -41,6 +47,7 @@ do
                     -use_interval true \
                     -visible_gpus $CUDA_VISIBLE_DEVICES \
                     -max_pos $MAX_POS \
+                    -max_pos_intro $MAX_POS_INTRO \
                     -max_length 600 \
                     -alpha 0.95 \
                     -exp_set $ST \
@@ -50,7 +57,9 @@ do
                     -result_path $RESULT_PATH \
                     -test_from $CHECKPOINT \
                     -model_name longformer \
-                    -val_pred_len 30 \
+                    -val_pred_len 20 \
+                    -gd_cells_rg $RG_CELL \
+                    -gd_cell_step R72 \
                     -saved_list_name save_lists/lsum-$ST-longformer-multi50-aftersdu.p \
                     -section_prediction \
                     -alpha_mtl 0.50

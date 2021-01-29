@@ -23,6 +23,21 @@ from uuid import uuid4
 import pdb
 nyt_remove_words = ["photo", "graph", "chart", "map", "table", "drawing"]
 
+INTRO_KWs_STR = "[introduction, introduction and motivation, motivation, motivations, basics and motivations, introduction., [sec:intro]introduction, *introduction*, i. introduction, [sec:level1]introduction, introduction and motivation, introduction[sec:intro], [intro]introduction, introduction and main results, introduction[intro], introduction and summary, [sec:introduction]introduction, overview, 1. introduction, [sec:intro] introduction, introduction[sec:introduction], introduction and results, introduction and background, [sec1]introduction, [introduction]introduction, introduction and statement of results, introduction[introduction], introduction and overview, introduction:, [intro] introduction, [sec:1]introduction, introduction and main result, introduction[sec1], [sec:level1] introduction, motivations, outline, introductory remarks, [sec1] introduction, introduction and motivations, 1.introduction, introduction and definitions, introduction and notation, introduction and statement of the results, i.introduction, introduction[s1], [sec:level1]introduction +,  introduction., introduction[s:intro], [i]introduction, [sec:int]introduction, introduction and observations, [introduction] introduction, [sec:1] introduction, **introduction**, [seci]introduction,, **introduction**, [seci]introduction, introduction and summary of results, introduction and outline, preliminary remarks, general introduction, [sec:intr]introduction, [s1]introduction, introduction[sec_intro], introduction and statement of main results, scientific motivation, [sec:sec1]introduction, *questions*, introduction and the model, intoduction, challenges, introduction[sec-intro], introduction and result, inroduction, [sec:intro]introduction +, introdution, 1 introduction, brief summary, motivation and introduction, [1]introduction, introduction and related work, [sec:one]introduction, [section1]introduction, [sect:intro]introduction]"
+
+INTRO_KWs_STR = "[" + str(['' + kw.strip() + '' for kw in INTRO_KWs_STR[1:-1].split(',')]) + "]"
+INTRO_KWs = eval(INTRO_KWs_STR)[0]
+
+CONC_KWs_STR = "[conclusion, conclusions, conclusion and future work, conclusions and future work, conclusion & future work, extensions, future work, related work and discussion, discussion and related work, conclusion and future directions, summary and future work, limitations and future work, future directions, conclusion and outlook, conclusions and future directions, conclusions and discussion, discussion and future directions, conclusions and discussions, conclusion and future direction, conclusions and future research, conclusion and future works, future plans, concluding remarks, conclusions and outlook, summary and outlook, final remarks, outlook, conclusion and outlook, conclusions and future work, summary and discussions, conclusion and future work, conclusions and perspectives, summary and concluding remarks, future work, conclusions., discussion and outlook, discussion & conclusions, open problems, remarks, conclusions[sec:conclusions], conclusion and perspectives, summary and future work, conclusion., summary & conclusions, closing remarks, final comments, future prospects, open questions, *conclusions*, [sec:conclusions]conclusions, conclusions and summary, comments, conclusion[sec:conclusion], perspectives, [sec:conclusion]conclusion, conclusions and future directions, summary & discussion, conclusions and remarks, conclusions and prospects, discussions and summary, future directions, conclusions and final remarks, the future, concluding comments, conclusions and open problems, summary[sec:summary], conclusions and future prospects, summary and remarks, conclusions and further work, conclusions[conclusions], [sec:summary]summary, comments and conclusions, summary and future prospects, [conclusion]conclusion, conclusion and remarks, concluding remark, further remarks, prospects, conclusion and open problems, conclusion and summary, v. conclusions, iv. conclusions,  summary and conclusions, summary and prospects, conclusions:, conclusion[conclusion], summary and final remarks, summary and future directions, summary & conclusion, [summary]summary, iv. conclusion, further questions, conclusion and future directions,  concluding remarks, further work, [conclusions]conclusions, outlook and conclusions, v. conclusion, *summary*, concluding remarks and open problems, conclusions and future works, future, [sec:conclusions] conclusions, [sec:concl]conclusions, remarks and conclusions, concluding remarks., conclusion and future works, summary., 4. conclusions, discussion and open problems, summary and comments, final remarks and conclusions, summary and conclusions., [sec:conc]conclusions, summary[summary], conclusions and open questions, [sec:conclusion]conclusions, further directions, conclusions and implications, conclusions & outlook, review, [sec:level1]conclusion, future developments, [sec:conc] conclusions, conclusions[sec:concl], conclusions and future perspectives, summary, conclusions and outlook, conclusions & discussion, [conclusions] conclusions, future research, concluding remarks and outlook, conclusions and future research, conclusion & outlook, discussion and future directions, conclusions[sec:conc], summary & outlook, vi. conclusions, future plans, [sec:summary] summary, conclusions and comments, conclusion and further work, conclusion and open questions, conclusions & future work, 5. conclusions, [sec:conclusion] conclusion, *concluding remarks*, iv. summary, conclusions[conc], conclusion:, [concl]conclusions, summary and perspective, conclusions[sec:conclusion], [sec:level1]conclusions, open issues, [sec:conc]conclusion, [sec:concl]conclusion, [sec:sum]summary, summary of the results, implications and conclusions, conclusions[conclusion], some remarks, conclusions[concl], conclusion and future research, conclusion remarks, vi. conclusion, perspective, conclusions and future developments, [conc]conclusion, general remarks, summary and conclusions[sec:summary], summary and open questions, 4. conclusion, conclusion and future prospects, concluding remarks and perspectives, remarks and questions, remarks and questions, [conclusion] conclusion, summary and implications, conclusive remarks, comments and conclusions, summary of conclusions, [conclusion]conclusions, conclusion and perspective, conclusion[sec:conc], [sec:summary]summary and conclusions, [sec:level1]summary, [sec:con]conclusion, [sec:level4]conclusion, conclusions and outlook., [summary]summary and conclusions, conclusion[sec:concl], 5. conclusion, [conc]conclusions, outlook and conclusion, remarks and conclusion,  summary and conclusion, conlusions, conclusion and final remarks, v. summary, future outlook, future improvements, summary and open problems, conclusion[concl], summary]"
+
+CONC_KWs_STR = "[" + str(['' + kw.strip() + '' for kw in CONC_KWs_STR[1:-1].split(',')]) + "]"
+CONC_KWs = eval(CONC_KWs_STR)[0]
+
+ABSTRACT_KWs_STR = "[abstract, 0 abstract]"
+ABSTRACT_KWs_STR = "[" + str(['' + kw.strip() + '' for kw in ABSTRACT_KWs_STR[1:-1].split(',')]) + "]"
+ABS_KWs = eval(ABSTRACT_KWs_STR)[0]
+
+
 
 def hashhex(s):
     """Returns a heximal formated SHA1 hash of the input string."""
@@ -73,8 +88,42 @@ class LongformerData():
 
         return len(src_subtokens)
 
+
+    def _encode_intro(self, src_sents_tokens, _intro_labels, chunk_size=2498):
+        idxs = [i for i, s in enumerate(src_sents_tokens) if (len(s[1]) > self.args.min_src_ntokens_per_sent) and (len(s[1]) < self.args.max_src_ntokens_per_sent)]
+        src_sents_tokens = [src_sents_tokens[i] for i in idxs]
+        _intro_labels = [_intro_labels[i] for i in idxs]
+
+        src_txt = [' '.join(sent[1]).strip() for sent in src_sents_tokens]
+        # section_heading_txt = [s for s in section_heading_txt]
+        sample_till_sent = 0
+
+        lenS = 0
+        for idx, sent in enumerate(src_txt):
+            if lenS < chunk_size:
+                sent_subtokens = self.tokenizer.tokenize(sent)
+                lenS += len(sent_subtokens)
+                sample_till_sent +=1
+            else:
+                lenS -= len(src_txt[idx-1])
+                sample_till_sent -= 1
+                break
+
+        text = ' {} {} '.format(self.sep_token, self.cls_token).join(src_txt[:sample_till_sent])
+        intro_labels = _intro_labels[:sample_till_sent]
+        # text = self.cls_token + ' '.join(src_txt) + self.cls_token
+        src_subtokens = self.tokenizer.tokenize(text)
+
+        src_subtokens = [self.cls_token] + src_subtokens[:chunk_size] + [self.sep_token]
+        src_subtoken_idxs = self.tokenizer.convert_tokens_to_ids(src_subtokens)
+
+        cls_ids_intro = [i for i, t in enumerate(src_subtoken_idxs) if t == self.cls_vid]
+
+
+        return src_subtoken_idxs, intro_labels, cls_ids_intro
+
     def make_chunks(self, src_sents_tokens, tgt, sent_labels=None, section_heading_txt=None, sent_rg_scores=None, chunk_size=2500,
-                    paper_idx=0):
+                    paper_idx=0, sent_sect_labels=None):
 
         idxs = [i for i, s in enumerate(src_sents_tokens) if (len(s[0]) > self.args.min_src_ntokens_per_sent)]
         tgt_txt = '<q>'.join([' '.join(tt) for tt in tgt])
@@ -88,10 +137,12 @@ class LongformerData():
         sent_labels = [_sent_labels[i] for i in idxs]
         section_heading_txt = [section_heading_txt[i] for i in idxs]
         sent_rg_scores = [sent_rg_scores[i] for i in idxs]
+        sent_sect_labels = [sent_sect_labels[i] for i in idxs]
 
         src_sents_tokens = src_sents_tokens[:self.args.max_src_nsents]
         sent_labels = sent_labels[:self.args.max_src_nsents]
         sent_rg_scores = sent_rg_scores[:self.args.max_src_nsents]
+        sent_sect_labels = sent_sect_labels[:self.args.max_src_nsents]
 
         section_heading_txt = section_heading_txt[:self.args.max_src_nsents]
 
@@ -142,10 +193,12 @@ class LongformerData():
         sent_labels = sent_labels[:len(cls_ids)]
         section_heading_txt = section_heading_txt[:len(cls_ids)]
         sent_rg_scores = sent_rg_scores[:len(cls_ids)]
+        sent_sect_labels = sent_sect_labels[:len(cls_ids)]
 
         out_sents_labels = []
         out_section_heading_txt = []
         out_sents_rg_scores = []
+        out_sent_sect_labels = []
         out_sect_sentwise_rg = []
         cur_len = 0
         out_src = []
@@ -159,18 +212,20 @@ class LongformerData():
                 out_sents_labels1 = out_sents_labels.copy()
                 out_section_heading_txt1 = out_section_heading_txt.copy()
                 out_sents_rg_scores1 = out_sents_rg_scores.copy()
+                out_sent_sect_labels1 = out_sent_sect_labels.copy()
                 out_src.clear()
                 out_sect_sentwise_rg.clear()
                 out_sents_labels.clear()
                 out_section_heading_txt.clear()
                 out_sents_rg_scores.clear()
+                out_sent_sect_labels.clear()
                 cur_len1 = cur_len
                 cur_len = 0
                 last_chunk = True
                 if len(out_src1) == 0:
                     j += 1
                     continue
-                yield out_src1, out_sents_labels1, out_section_heading_txt1, out_sents_rg_scores1, cur_len1, last_chunk, rg_score, section_rouge
+                yield out_src1, out_sents_labels1, out_section_heading_txt1, out_sents_rg_scores1, cur_len1, last_chunk, rg_score, section_rouge, out_sent_sect_labels1
 
             if cur_len < chunk_size:
                 out_src.append((src_sents_tokens[j][0], src_sents_tokens[j][1], src_sents_tokens[j][2]))
@@ -178,6 +233,7 @@ class LongformerData():
                 out_sents_labels.append(sent_labels[j])
                 out_section_heading_txt.append(section_heading_txt[j])
                 out_sents_rg_scores.append(sent_rg_scores[j])
+                out_sent_sect_labels.append(sent_sect_labels[j])
                 if j != 0:
                     cur_len += len(src_subtokens[cls_ids[j - 1]:cls_ids[j]])
                 else:
@@ -191,15 +247,17 @@ class LongformerData():
                 out_sents_labels = out_sents_labels[:-1]
                 out_section_heading_txt = out_section_heading_txt[:-1]
                 out_sents_rg_scores = out_sents_rg_scores[:-1]
+                out_sent_sect_labels = out_sent_sect_labels[:-1]
                 out_src1 = out_src.copy()
                 out_sect_sentwise_rg1 = out_sect_sentwise_rg.copy()
                 out_sents_labels1 = out_sents_labels.copy()
                 out_section_heading_txt1 = out_section_heading_txt.copy()
                 out_sents_rg_scores1 = out_sents_rg_scores.copy()
+                out_sent_sect_labels1 = out_sent_sect_labels.copy()
                 out_src.clear()
                 out_sents_labels.clear()
                 out_section_heading_txt.clear()
-                out_sents_rg_scores.clear()
+                out_sent_sect_labels.clear()
                 cur_len1 = cur_len
                 cur_len = 0
                 last_chunk = False
@@ -207,28 +265,19 @@ class LongformerData():
                     j += 1
                     continue
 
-                yield out_src1, out_sents_labels1, out_section_heading_txt1, out_sents_rg_scores1, cur_len1, last_chunk, rg_score, section_rouge
+                yield out_src1, out_sents_labels1, out_section_heading_txt1, out_sents_rg_scores1, cur_len1, last_chunk, rg_score, section_rouge, out_sent_sect_labels1
 
     def preprocess_single(self, src, tgt, sent_rg_scores=None, sent_labels=None, sent_sections=None,
-                          use_bert_basic_tokenizer=False, is_test=False, section_rgs=None, debug=False):
+                          use_bert_basic_tokenizer=False, is_test=False, section_rgs=None, debug=False, sent_sect_labels=None):
 
 
         if ((not is_test) and len(src) == 0):
             return None
 
         original_src_txt = [' '.join(s[0]) for s in src]
-        idxs = [i for i, s in enumerate(src) if (len(s[0]) > self.args.min_src_ntokens_per_sent)]
+        idxs = [i for i, s in enumerate(src)]
 
-        _sent_labels = [0] * len(src)
-        for l in sent_labels:
-            try:
-                _sent_labels[l] = 1
-            except Exception as e:
-                print(e)
-                import pdb;
-                pdb.set_trace()
-                print(sent_labels)
-                print(len(src))
+        _sent_labels = sent_labels
 
         src = [src[i][:self.args.max_src_ntokens_per_sent] for i in idxs]
 
@@ -237,11 +286,18 @@ class LongformerData():
         if sent_rg_scores is not None:
             sent_rg_scores = [sent_rg_scores[i] for i in idxs]
 
+        if sent_sect_labels is not None:
+            sent_sect_labels_chunk = [sent_sect_labels[i] for i in idxs]
+
         src = src[:self.args.max_src_nsents]
         sent_labels = sent_labels[:self.args.max_src_nsents]
         sent_sections = sent_sections[:self.args.max_src_nsents]
+
         if sent_rg_scores is not None:
             sent_rg_scores = sent_rg_scores[:self.args.max_src_nsents]
+
+        if sent_sect_labels is not None:
+            sent_sect_labels = sent_sect_labels[:self.args.max_src_nsents]
 
         if ((not is_test) and len(src) < self.args.min_src_nsents):
             return None
@@ -278,6 +334,9 @@ class LongformerData():
         if sent_rg_scores is not None:
             sent_rg_scores = sent_rg_scores[:len(cls_indxes)]
 
+        if sent_sect_labels is not None:
+            sent_sect_labels_chunk = sent_sect_labels[:len(cls_indxes)]
+
         tgt_subtokens_str = 'madeupword0000 ' + ' madeupword0002 '.join(
             [' '.join(self.tokenizer.tokenize(' '.join(tt), use_bert_basic_tokenizer=use_bert_basic_tokenizer)) for tt
              in tgt]) + ' madeupword0001'
@@ -293,7 +352,7 @@ class LongformerData():
         # if debug:
         #     import pdb;pdb.set_trace()
 
-        return src_subtoken_idxs, sent_rg_scores, sent_labels, sent_sections, tgt_subtoken_idxs, segments_ids, cls_indxes, src_txt, tgt_txt, sents_sect_wise_rg, src_sents_number, src_sent_token_count
+        return src_subtoken_idxs, sent_rg_scores, sent_labels, sent_sections, tgt_subtoken_idxs, segments_ids, cls_indxes, src_txt, tgt_txt, sents_sect_wise_rg, src_sents_number, src_sent_token_count, sent_sect_labels
 
 class BertData():
     def __init__(self, args):
@@ -560,7 +619,7 @@ class BertData():
 
 # bert-function
 def format_to_bert(args):
-    test_kws = pd.read_csv('csv_files/train_papers_sect8.csv')
+    test_kws = pd.read_csv('csv_files/train_papers_sects_longsum.csv')
 
     kws = {
         'intro': [kw.strip() for kw in test_kws['intro'].dropna()],
@@ -584,6 +643,7 @@ def format_to_bert(args):
     # ARXIVIZATION
     bart = args.bart
     check_path_existence(args.save_path)
+    intro_map = {}
     for corpus_type in datasets:
         a_lst = []
         c = 0
@@ -591,7 +651,7 @@ def format_to_bert(args):
             real_name = json_f.split('/')[-1]
             c += 1
             a_lst.append(
-                (corpus_type, json_f, args, pjoin(args.save_path, real_name.replace('json', 'bert.pt')), kws, bart,
+                (corpus_type, json_f, args, pjoin(args.save_path, real_name.replace('.json', '.bert.pt')), kws, bart,
                  sent_numbers, 1))
         print("Number of files: " + str(c))
 
@@ -604,9 +664,9 @@ def format_to_bert(args):
 
 
         # single
-        # json_f = args.raw_path + '/train.6.json'
-        # _format_to_bert(('val', str(json_f), args, pjoin(args.save_path, str(json_f).replace('json', 'bert.pt')), kws, bart,
-        #          sent_numbers, 25))
+        # json_f = args.raw_path + '/val.9.json'
+        # _format_to_bert(('test', str(json_f), args, pjoin(args.save_path, str(json_f).replace('.json', '.bert.pt')), kws, bart,
+        #          sent_numbers, 8))
 
         ##########################
         ###### <DEBUGGING> #######
@@ -616,45 +676,27 @@ def format_to_bert(args):
         print('Processing {} set with {} json files...'.format(corpus_type, len(a_lst)))
         all_papers_count = 0
         all_paper_ids = {}
+        intro_labels_count = []
+        intro_labels_len_count = []
         for d in tqdm(pool.imap(_format_to_bert, a_lst), total=len(a_lst), desc=''):
             all_paper_ids[d[0]] = d[1]
             all_papers_count += d[2]
+            intro_labels_count.extend(d[3])
+            intro_labels_len_count.extend(d[4])
 
         pool.close()
         pool.join()
-
+        import statistics
+        print('Num of papers: {}'.format(all_papers_count))
+        print('Median of intro labels: {}'.format(statistics.median(intro_labels_count)))
+        print('Mean of intro labels: {}'.format(statistics.mean(intro_labels_count)))
+        print('Min of intro labels: {}'.format(min(intro_labels_len_count)))
 
 def _format_to_bert(params):
     corpus_type, json_file, args, save_file, kws, bart, sent_numbers_whole, debug_idx = params
     papers_ids = set()
-
-    # if os.path.exists(save_file):
-    #     return
-
-    def get_sect_id(sect):
-
-        def check_existense(kws, sect):
-            for kw in kws:
-                if len(kw.split()) < len(sect.split()):
-                    if kw in sect:
-                        return True
-                else:
-                    if sect in kw:
-                        return True
-            return False
-
-        if sect.lower() in 'abstract' or 'abstract' in sect.lower() or sect.lower() in kws['conclusion'] or check_existense(kws['conclusion'], sect.lower()):
-            return 3
-        elif sect.lower() in kws['intro'] or check_existense(kws['intro'], sect.lower()):
-            return 0
-        elif sect.lower() in kws['exp'] or check_existense(kws['exp'], sect.lower()):
-            return 2
-        elif sect.lower() in kws['res'] or check_existense(kws['res'], sect.lower()):
-            return 2
-        # elif sect.lower() in kws['conclusion'] or check_existense(kws['conclusion'], sect.lower()):
-        #     return 5
-        else:
-            return 1
+    intro_labels_count = []
+    intro_labels_len_count = []
 
     def remove_ack(source, debug=False):
         out = []
@@ -663,11 +705,23 @@ def _format_to_bert(params):
             import pdb;pdb.set_trace()
 
         for sent in source:
-            if 'acknowledgment' in sent[sect_idx].lower().split() or 'acknowledgments' in sent[sect_idx].lower().split() or 'acknowledgements' in sent[sect_idx].lower().split() \
-                    or 'fund' in sent[sect_idx].lower().split() or 'funding' in sent[sect_idx].lower().split() \
-                    or 'appendices' in sent[sect_idx].lower().split() or 'proof of' in sent[sect_idx].lower() or \
-                    'related work' in sent[sect_idx].lower() or 'previous works' in sent[sect_idx].lower() or 'references' in sent[sect_idx].lower().split() \
-                    or 'figure captions' in sent[sect_idx].lower() or 'acknowledgement' in sent[sect_idx].lower().split() or 'appendix' in sent[sect_idx].lower().split():
+            section_txt = sent[sect_idx].lower().replace(':', ' ').replace('.', ' ').replace(';', ' ')
+            if \
+                    'acknowledgment' in section_txt.split() \
+                    or 'acknowledgments' in section_txt.split() \
+                    or 'acknowledgements' in section_txt.split() \
+                    or 'fund' in section_txt.split() \
+                    or 'funding' in section_txt.split() \
+                    or 'appendices' in section_txt.split() \
+                    or 'proof of' in section_txt.split() \
+                    or 'related work' in section_txt.split() \
+                    or 'previous works' in section_txt.split() \
+                    or 'references' in section_txt.split() \
+                    or 'figure captions' in section_txt.split() \
+                    or 'acknowledgement' in section_txt.split() \
+                    or 'appendix' in section_txt.split()\
+                    or 'appendix:' in section_txt.split():
+
                 continue
 
             else:
@@ -675,6 +729,86 @@ def _format_to_bert(params):
 
         return out
 
+    def _get_intro(source, paper_id=None, retrieve_first_sect=False, section_id=None, debug=False):
+        def _check_subtokens(section_heading):
+            for subheading in section_heading.split():
+                if subheading.lower() in kws['intro']:
+                    return True
+
+        def f7(seq):
+            seen = set()
+            seen_add = seen.add
+            return [x for x in seq if not (x in seen or seen_add(x))]
+
+
+        out = []
+        sect_idx = 2
+
+        if section_id is None:
+            if retrieve_first_sect:
+
+                sections = f7([s[2] for s in source])
+                for sent in source:
+                    for kw in INTRO_KWs:
+                        if kw.lower() == sent[sect_idx].lower():
+                            out.append(sent)
+                            break
+
+                    for kw in CONC_KWs:
+                        if kw.lower() in sent[sect_idx].lower():
+                            out.append(sent)
+                            break
+
+                if debug:
+                    print(1)
+                    import pdb;pdb.set_trace()
+
+                    # if sent[sect_idx].lower() == first_sect.lower():
+                    #     out.append(sent)
+                # if len(out) == 0:
+                #     first_sect = list(sections)[0]
+                #     for sent in source:
+                #         if sent[sect_idx].lower() == first_sect.lower():
+                #             out.append(sent)
+
+                if len(out) < 6:
+                    first_sect = list(sections)[0]
+                    for sent in source:
+                        if sent[sect_idx].lower() == first_sect.lower():
+                            out.append(sent)
+                    if debug:
+                        print(1.1)
+                        import pdb;
+                        pdb.set_trace()
+                    if len(out) < 6 and len(list(sections)) > 1:
+                        second_sect = list(sections)[1]
+                        for sent in source:
+                            if sent[sect_idx].lower() == second_sect.lower():
+                                out.append(sent)
+                        if len(out) < 6:
+                            third_sect = list(sections)[2]
+                            for sent in source:
+                                if sent[sect_idx].lower() == third_sect.lower():
+                                    out.append(sent)
+
+                    # else:
+                    #     return None
+            else:
+                for sent in source:
+                    if sent[sect_idx].lower() in kws['intro'] \
+                            or _check_subtokens(sent[sect_idx]):
+                        out.append(sent)
+        else:
+            for sent in source:
+                if sent[-1] in section_id:
+                    out.append(sent)
+
+        if debug:
+            print(2)
+            import pdb;
+            pdb.set_trace()
+
+        return out
 
     is_test = corpus_type == 'test'
     # if (os.path.exists(save_file)):
@@ -688,89 +822,131 @@ def _format_to_bert(params):
         CHUNK_SIZE_CONST = 512
     elif model_name == 'longformer':
         bert = LongformerData(args)
-        CHUNK_SIZE_CONST = 2500
+        CHUNK_SIZE_CONST = 2046
+
+    CHUNK_INTRO = 1536
 
     logger.info('Processing %s' % json_file)
     jobs = json.load(open(json_file))
     datasets = []
 
-    # for j, data in tqdm(enumerate(jobs[debug_idx-1:]), total=len(jobs[debug_idx-1:])):
     for j, data in enumerate(jobs[debug_idx-1:]):
         try:
             paper_id, data_src, data_tgt = data['id'], data['src'], data['tgt']
+            # import pdb;pdb.set_trace()
+            # labels = [d[-2] for d in data_src]
+
             # data_src = [s[1:] for s in data_src]
-
-            if len(data_src) < 2:
-               continue
-
             if not isinstance(data_src[0][0], int):
                 data_src = [[idx] + s for idx, s in enumerate(data_src)]
 
             data_src = remove_ack(data_src)
-            if 'pubmed' in json_file:
-                data_tgt = [d[0] for d in data_tgt]
+            # data_intro = _get_intro(data_src, section_id=[0])
+            data_intro = _get_intro(data_src, retrieve_first_sect=True, debug=False)
+            # data_intro = _get_intro(data_src, retrieve_first_sect=True)
+            data_src = data_intro
+
+            if len(data_intro) < 3:
+                # retrieve first section as intro
+                # data_intro = _get_intro(data_src, paper_id, retrieve_first_sect=True, section_id=[0,1])
+
+                data_intro = _get_intro(data_src, paper_id, retrieve_first_sect=True, debug=False)
+                # data_intro = _get_intro(data_src, paper_id, retrieve_first_sect=True)
+                if data_intro is None:
+                    with open('np_intro.txt', mode='a') as F:
+                        F.write(save_file + ' idx: ' + str(j) + '\n')
+                    continue
 
 
+            # if len(data_intro) <= 7:
+            #     data_intro = _get_intro(data_src, paper_id, retrieve_first_sect=True, section_id=[0,1,3])
+            #
+            # if len(data_intro) <= 7:
+            #     data_intro = _get_intro(data_src, paper_id, retrieve_first_sect=True, section_id=[0, 1, 2, 3])
+            #     if data_intro is None:
+            #         with open('np_intro.txt', mode='a') as F:
+            #             F.write(save_file + ' idx: ' + str(j) + '\n')
+            #         continue
+
+
+            # if len(data_intro)<=5:
+            #     data_intro = _get_intro(data_src, paper_id, retrieve_first_sect=True, section_id=2)
+
+            if len(data_intro) < 3:
+                # import pdb;pdb.set_trace()
+
+                with open('np_intro.txt', mode='a') as F:
+                    F.write(save_file + ' idx: ' + str(j) + '\n')
+                continue
 
         except:
+            # import pdb;pdb.set_trace()
+            print("NP: " + save_file + ' idx: ' + str(j) + '\n')
             with open('np_parsing.txt', mode='a') as F:
                 F.write(save_file + ' idx: ' + str(j) + '\n')
 
-            paper_id, data_src, data_tgt = data[0]['id'], data[0]['src'], data[0]['tgt']
-            # data_src = [s[1:] for s in data_src]
-            data_src = remove_ack(data_src)
-
         if len(data_src) < 5:
+            # import pdb;pdb.set_trace()
             continue
 
         if sent_numbers_whole is not None:
             data_src = [d for d in data_src if d[0] in sent_numbers_whole[paper_id]]
 
-        source_sents = [(s[1], s[2]) for s in data_src]
-        source_sents = [s[0] for s in source_sents if len(s[0]) > args.min_src_ntokens_per_sent and len(s[0]) < args.max_src_ntokens_per_sent]
-
-        if len(source_sents) == 0:
-            continue
 
         data_src = [s for s in data_src if len(s[1]) > args.min_src_ntokens_per_sent and len(s[1]) < args.max_src_ntokens_per_sent]
         # sent_labels = greedy_selection(source_sents, tgt, 10)
-        sent_labels = [i for i, s in enumerate(data_src) if
-                       s[-1] == 1 and len(s[1]) > args.min_src_ntokens_per_sent and len(
-                           s[1]) < args.max_src_ntokens_per_sent]
+        sent_labels = [i for i, s in enumerate(data_src) if s[-2] == 1]
         sent_rg_scores = [s[3] for i, s in enumerate(data_src) if len(s[1]) > args.min_src_ntokens_per_sent and len(s[1]) < args.max_src_ntokens_per_sent]
-
 
         if (args.lower):
             source_sents = [([tkn.lower() for tkn in s[1]], s[2], s[0]) for s in data_src]
-            # tgt = [' '.join(s[0]).lower().split() for s in tgt] #pubmed-long
-            # import pdb;pdb.set_trace()
-
             data_tgt = [[tkn.lower() for tkn in s] for s in data_tgt]  # arxiv ––non-pubmed
         else:
             source_sents = [(s[1], s[2], s[0]) for s in data_src]
 
-        sent_numbers = [s[0] for s in data_src]
-
         sent_sections = [s[2] for s in data_src]
+        sent_sect_labels = [s[-1] for s in data_src]
         # print(j)
+
+        intro_text = ' '.join([' '.join(s[1]) for s in data_intro])
+        intro_labels_prior = [s[-2] for s in data_intro]
+        intro_subids, intro_labels, cls_ids_intro = bert._encode_intro(data_intro, intro_labels_prior, chunk_size=CHUNK_INTRO)
+
+        # import pdb;pdb.set_trace()
+        if len(intro_labels) < 5:
+            # print('not: {}'.format(paper_id))
+            # import pdb;pdb.set_trace()
+            print(save_file + ' idx: ' + str(j) + '\n')
+            continue
+        try:
+            intro_labels_count.append(sum(intro_labels))
+            intro_labels_len_count.append(len(intro_labels))
+        except:
+            import pdb;pdb.set_trace()
+            print(paper_id)
+        # if paper_id == "cond-mat0609513":
+        #     import pdb;
+        #     pdb.set_trace()
+        if len(intro_text.strip()) == 0:
+            with open('not-intro-l1.txt', mode='a') as FD:
+                FD.write(save_file + ' idx: ' + str(j) + ';paper_id: ' + str(paper_id) + '\n')
+            continue
         if True:
             tkn_len = bert.cal_token_len(source_sents)
-            # import pdb;pdb.set_trace()
             debug = False
-
 
             if tkn_len > CHUNK_SIZE_CONST:
                 try:
                     for chunk_num, chunk in enumerate(
                             bert.make_chunks(source_sents, data_tgt, sent_labels=sent_labels, section_heading_txt=sent_sections,
-                                             sent_rg_scores=sent_rg_scores, chunk_size=CHUNK_SIZE_CONST)):
-                        src_chunk, sent_labels_chunk, sent_sections_chunk, sent_rg_scores_chunk, curlen, is_last_chunk, rg_score, section_rgs = chunk
-                        src_label_paralel = zip(src_chunk, sent_labels_chunk)
-                        sent_labels_chunk = [i for i, s in enumerate(src_label_paralel) if s[1] == 1]
-                        b_data = bert.preprocess_single(src_chunk, data_tgt, sent_labels=[0],
+                                             sent_rg_scores=sent_rg_scores, sent_sect_labels=sent_sect_labels,  chunk_size=CHUNK_SIZE_CONST)):
+
+
+                        src_chunk, sent_labels_chunk, sent_sections_chunk, sent_rg_scores_chunk, curlen, is_last_chunk, rg_score, section_rgs, sent_sect_labels_chunk = chunk
+                        b_data = bert.preprocess_single(src_chunk, data_tgt, sent_labels=sent_labels_chunk,
                                                         sent_rg_scores=sent_rg_scores_chunk,
                                                         use_bert_basic_tokenizer=args.use_bert_basic_tokenizer,
-                                                        is_test=is_test, sent_sections=sent_sections_chunk, section_rgs=section_rgs, debug=debug)
+                                                        is_test=is_test, sent_sections=sent_sections_chunk, section_rgs=section_rgs, debug=debug, sent_sect_labels=sent_sect_labels_chunk)
 
 
                         if (b_data is None):
@@ -781,22 +957,25 @@ def _format_to_bert(params):
                             continue
 
                         src_subtoken_idxs, sent_rg_scores, sent_labels_chunk, sent_sections_chunk, tgt_subtoken_idxs, \
-                        segments_ids, cls_ids, src_txt, tgt_txt, sents_sect_wise_rg, src_sent_number, src_sent_token_count = b_data
+                        segments_ids, cls_ids, src_txt, tgt_txt, sents_sect_wise_rg, src_sent_number, src_sent_token_count, sent_sect_labels = b_data
+                        if len(sent_labels_chunk) != len(cls_ids):
+                            print(len(sent_labels_chunk))
+                            print('Cls length should equal sent lables: {}'.format(paper_id))
 
-                        # sent_sections_chunk = [0 for _ in range(len(sent_sections_chunk))]
                         try:
-                            # rg_score = evaluate_rouge([tgt_txt.replace('<q>', ' ')], [' '.join(src_txt)])[2] / 100
+                            # import pdb;
+                            # pdb.set_trace()
                             b_data_dict = {"src": src_subtoken_idxs, "tgt": tgt_subtoken_idxs,
-                                           "src_sent_labels": sent_rg_scores.copy() if sent_rg_scores is not None else sent_sections_chunk,
+                                           "src_sent_rg": sent_rg_scores.copy() if sent_rg_scores is not None else sent_sections_chunk,
                                            "sent_labels": sent_labels_chunk.copy(),
                                            "segs": segments_ids, 'clss': cls_ids,
                                            'src_txt': src_txt, "tgt_txt": tgt_txt,
                                            "paper_id": paper_id + '___' + str(chunk_num) + '___' + datetime.now().strftime('%Y%m-%d%H-%M%S-') + str(uuid4()),
-                                           "sent_sect_labels": [get_sect_id(sect) for sect in sent_sections_chunk], "segment_rg_score": rg_score,
-                                           "sent_sections_txt": sent_sections_chunk,  "sent_sect_wise_rg": sents_sect_wise_rg, "sent_numbers":src_sent_number,
-                                           "sent_token_count":src_sent_token_count}
-                            # import pdb;
-                            # pdb.set_trace()
+                                           "sent_sect_labels": sent_sect_labels.copy(), "segment_rg_score": rg_score,
+                                           "sent_sections_txt": sent_sections_chunk,  "sent_sect_wise_rg": sents_sect_wise_rg, "sent_numbers": src_sent_number,
+                                           "sent_token_count":src_sent_token_count,
+                                           "intro_txt": intro_text, "src_intro": intro_subids,
+                                           "intro_labels": intro_labels, "intro_cls_ids": cls_ids_intro}
 
                             papers_ids.add(paper_id.split('___')[0])
                             datasets.append(b_data_dict)
@@ -819,14 +998,12 @@ def _format_to_bert(params):
 
                     for chunk_num, chunk in enumerate(
                             bert.make_chunks(source_sents, data_tgt, sent_labels=sent_labels, section_heading_txt=sent_sections,
-                                             sent_rg_scores=sent_rg_scores, chunk_size=CHUNK_SIZE_CONST)):
-
-                        src_chunk, sent_labels_chunk, sent_sections_chunk, sent_rg_scores_chunk, curlen, is_last_chunk, rg_score, section_rgs = chunk
-
-                        b_data = bert.preprocess_single(src_chunk, data_tgt, sent_labels=[0],
+                                             sent_rg_scores=sent_rg_scores, sent_sect_labels=sent_sect_labels,  chunk_size=CHUNK_SIZE_CONST)):
+                        src_chunk, sent_labels_chunk, sent_sections_chunk, sent_rg_scores_chunk, curlen, is_last_chunk, rg_score, section_rgs, sent_sect_labels_chunk = chunk
+                        b_data = bert.preprocess_single(src_chunk, data_tgt, sent_labels=sent_labels_chunk,
                                                         sent_rg_scores=sent_rg_scores_chunk,
                                                         use_bert_basic_tokenizer=args.use_bert_basic_tokenizer,
-                                                        is_test=is_test, sent_sections=sent_sections_chunk, section_rgs=section_rgs, debug=debug)
+                                                        is_test=is_test, sent_sections=sent_sections_chunk, section_rgs=section_rgs, debug=debug, sent_sect_labels=sent_sect_labels_chunk)
 
                         if b_data == None:
                             with open('not_parsed_processing.txt', mode='a') as F:
@@ -835,20 +1012,28 @@ def _format_to_bert(params):
                             continue
 
                         src_subtoken_idxs, sent_rg_scores, sent_labels_chunk, sent_sections_chunk, tgt_subtoken_idxs, \
-                        segments_ids, cls_ids, src_txt, tgt_txt, sents_sect_wise_rg, src_sent_number, src_sent_token_count = b_data
+                        segments_ids, cls_ids, src_txt, tgt_txt, sents_sect_wise_rg, src_sent_number, src_sent_token_count, sent_sect_labels = b_data
 
-                        # print(sent_rg_scores)
-                        # import pdb;pdb.set_trace()
-                        # sent_rg_scores = [0 for _ in range(len(sent_labels))]
-                        # sent_sections = [0 for _ in range(len(sent_labels))]
+                        if len(sent_labels_chunk) != len(cls_ids):
+                            print(len(sent_labels_chunk))
+                            print('Cls length should equal sent lables: {}'.format(paper_id))
+
+                        # import pdb;
+                        # pdb.set_trace()
                         b_data_dict = {"src": src_subtoken_idxs, "tgt": tgt_subtoken_idxs,
-                                       "src_sent_labels": sent_rg_scores.copy() if sent_rg_scores is not None else sent_sections,
-                                       "sent_labels": sent_labels.copy(),
+                                       "src_sent_rg": sent_rg_scores.copy() if sent_rg_scores is not None else sent_sections_chunk,
+                                       "sent_labels": sent_labels_chunk.copy(),
                                        "segs": segments_ids, 'clss': cls_ids,
-                                       'src_txt': src_txt, "tgt_txt": tgt_txt, "paper_id": paper_id + '___' + 'single' + '___' + datetime.now().strftime('%Y%m-%d%H-%M%S-') + str(uuid4()),
-                                       "sent_sect_labels": [0 for _ in range(len(sent_sections))], "segment_rg_score": 0,
-                                       "sent_sections_txt": sent_sections, "sent_sect_wise_rg": sents_sect_wise_rg, "sent_numbers":src_sent_number,
-                                       "sent_token_count":src_sent_token_count}
+                                       'src_txt': src_txt, "tgt_txt": tgt_txt,
+                                       "paper_id": paper_id + '___' + str(
+                                           chunk_num) + '___' + datetime.now().strftime('%Y%m-%d%H-%M%S-') + str(
+                                           uuid4()),
+                                       "sent_sect_labels": sent_sect_labels.copy(), "segment_rg_score": rg_score,
+                                       "sent_sections_txt": sent_sections_chunk,
+                                       "sent_sect_wise_rg": sents_sect_wise_rg, "sent_numbers": src_sent_number,
+                                       "sent_token_count": src_sent_token_count,
+                                       "intro_txt": intro_text, "src_intro": intro_subids,
+                                       "intro_labels": intro_labels, "intro_cls_ids": cls_ids_intro}
                         papers_ids.add(paper_id.split('___')[0])
                         datasets.append(b_data_dict)
                 except:
@@ -879,10 +1064,10 @@ def _format_to_bert(params):
 
     datasets = []
     gc.collect()
-    return save_file, papers_ids, len(papers_ids)
+    return save_file, papers_ids, len(papers_ids), intro_labels_count, intro_labels_len_count
 
 # line function
-def format_longsum_to_lines(args):
+def format_to_lines(args):
     if args.dataset != '':
         corpuses_type = [args.dataset]
     else:
@@ -902,81 +1087,83 @@ def format_longsum_to_lines(args):
             p_ct = 0
             all_papers_count = 0
             curr_paper_count = 0
+            check_path_existence(args.save_path)
+
             ##########################
             ###### <DEBUGGING> #######
             ##########################
 
-            # for a in tqdm(a_lst, total=len(a_lst)):
-            #     d = _format_longsum_to_lines_section_based(a)
-            #     if d is not None:
-            #         # dataset.extend(d[0])
-            #         dataset.append(d)
-            #         if (len(dataset) > args.shard_size):
-            #             pt_file = "{:s}{:s}.{:d}.json".format(args.save_path + '', corpus_type, p_ct)
-            #             check_path_existence(args.save_path)
-            #             print(pt_file)
-            #             with open(pt_file, 'w') as save:
-            #                 # save.write('\n'.join(dataset))
-            #                 save.write(json.dumps(dataset))
-            #                 print('data len: {}'.format(len(dataset)))
-            #                 p_ct += 1
-            #                 all_papers_count += len(dataset)
-            #                 dataset = []
-            # if (len(dataset) > 0):
-            #
-            #     pt_file = "{:s}{:s}.{:d}.json".format(args.save_path + '', corpus_type, p_ct)
-            #     print(pt_file)
-            #     with open(pt_file, 'w') as save:
-            #         # save.write('\n'.join(dataset))
-            #         save.write(json.dumps(dataset))
-            #         p_ct += 1
-            #         all_papers_count += len(dataset)
-            #         dataset = []
-            #
-            # print('Processed {} papers for {} set'.format(all_papers_count, corpus_type))
-            ###########################
-            ###### </DEBUGGING> #######
-            ###########################
-
-            check_path_existence(args.save_path)
-
-            # for d in tqdm(pool.imap_unordered(_format_longsum_to_lines_section_based, a_lst), total=len(a_lst)):
-            for d in tqdm(pool.imap_unordered(_format_longsum_to_lines, a_lst), total=len(a_lst)):
-                # d_1 = d[1]
+            for a in tqdm(a_lst, total=len(a_lst)):
+                d = _format_to_lines(a)
                 if d is not None:
-                    all_papers_count+=1
-                    curr_paper_count+=1
-
                     # dataset.extend(d[0])
                     dataset.append(d)
-                    # import pdb;pdb.set_trace()
-                    # if (len(dataset) > args.shard_size):
-                    if (curr_paper_count > args.shard_size):
+                    if (len(dataset) > args.shard_size):
                         pt_file = "{:s}{:s}.{:d}.json".format(args.save_path + '', corpus_type, p_ct)
+                        check_path_existence(args.save_path)
                         print(pt_file)
                         with open(pt_file, 'w') as save:
                             # save.write('\n'.join(dataset))
                             save.write(json.dumps(dataset))
                             print('data len: {}'.format(len(dataset)))
                             p_ct += 1
+                            all_papers_count += len(dataset)
                             dataset = []
-                        curr_paper_count = 0
-
-
-            pool.close()
-            pool.join()
-
             if (len(dataset) > 0):
+
                 pt_file = "{:s}{:s}.{:d}.json".format(args.save_path + '', corpus_type, p_ct)
                 print(pt_file)
-                # all_papers_count += len(dataset)
                 with open(pt_file, 'w') as save:
                     # save.write('\n'.join(dataset))
                     save.write(json.dumps(dataset))
                     p_ct += 1
-
+                    all_papers_count += len(dataset)
                     dataset = []
+
             print('Processed {} papers for {} set'.format(all_papers_count, corpus_type))
+            ###########################
+            ###### </DEBUGGING> #######
+            ###########################
+
+
+            # for d in tqdm(pool.imap_unordered(_format_longsum_to_lines_section_based, a_lst), total=len(a_lst)):
+            # for d in tqdm(pool.imap_unordered(_format_to_lines, a_lst), total=len(a_lst)):
+            #     # d_1 = d[1]
+            #     if d is not None:
+            #         all_papers_count+=1
+            #         curr_paper_count+=1
+            #
+            #         # dataset.extend(d[0])
+            #         dataset.append(d)
+            #         # import pdb;pdb.set_trace()
+            #         # if (len(dataset) > args.shard_size):
+            #         if (curr_paper_count > args.shard_size):
+            #             pt_file = "{:s}{:s}.{:d}.json".format(args.save_path + '', corpus_type, p_ct)
+            #             print(pt_file)
+            #             with open(pt_file, 'w') as save:
+            #                 # save.write('\n'.join(dataset))
+            #                 save.write(json.dumps(dataset))
+            #                 print('data len: {}'.format(len(dataset)))
+            #                 p_ct += 1
+            #                 dataset = []
+            #             curr_paper_count = 0
+            #
+            #
+            # pool.close()
+            # pool.join()
+            #
+            # if (len(dataset) > 0):
+            #     pt_file = "{:s}{:s}.{:d}.json".format(args.save_path + '', corpus_type, p_ct)
+            #     print(pt_file)
+            #     # all_papers_count += len(dataset)
+            #     with open(pt_file, 'w') as save:
+            #         # save.write('\n'.join(dataset))
+            #         save.write(json.dumps(dataset))
+            #         p_ct += 1
+            #
+            #         dataset = []
+            # print('Processed {} papers for {} set'.format(all_papers_count, corpus_type))
+
 
     # sections = sorted(sections.items(), key=lambda x: x[1], reverse=True)
     # sections = dict(sections)
@@ -986,7 +1173,7 @@ def format_longsum_to_lines(args):
     #         F.write('\n')
 
 
-def _format_longsum_to_lines(params):
+def _format_to_lines(params):
     src_path, keep_sect_num = params
 
     def load_json(src_json):
