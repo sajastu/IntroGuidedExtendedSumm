@@ -67,9 +67,9 @@ class Batch(object):
 
             if not is_test:
 
-                pre_src_intro = [x[12] for x in data]
-                pre_intro_clss = [x[13] for x in data]
-                pre_intro_sent_labels = [x[14] for x in data]
+                pre_src_intro_list = [x[12] for x in data]
+                pre_intro_clss_list = [x[13] for x in data]
+                pre_intro_sent_labels_list = [x[14] for x in data]
 
                 sent_sect_labels = [x[6] for x in data]
                 sent_sect_headings = [x[9] for x in data]
@@ -81,9 +81,9 @@ class Batch(object):
                 # labelize_str_convert(sent_sect_labels)
                 labelize(sent_sect_labels, sent_sect_headings=sent_sect_headings, paper_id=paper_id)
             else:
-                pre_src_intro = [x[15] for x in data]
-                pre_intro_clss = [x[16] for x in data]
-                pre_intro_sent_labels = [x[17] for x in data]
+                pre_src_intro_list = [x[15] for x in data]
+                pre_intro_clss_list = [x[16] for x in data]
+                pre_intro_sent_labels_list = [x[17] for x in data]
 
                 sent_sect_labels = [x[8] for x in data]
                 # labelize_str_convert(sent_sect_labels)
@@ -94,22 +94,23 @@ class Batch(object):
                 # section_rg = [x[10] for x in data]
 
             src = torch.tensor(self._pad(pre_src, 0))
-            src_intro = torch.tensor(self._pad(pre_src_intro, 0))
+            src_intro_list = [torch.tensor(self._pad(pre_src_intro, 0)) for pre_src_intro in pre_src_intro_list]
             tgt = torch.tensor(self._pad(pre_tgt, 0))
 
             segs = torch.tensor(self._pad(pre_segs, 0))
 
             mask_src = ~(src == self.PAD_ID)
-            mask_src_intro = ~(src_intro == self.PAD_ID)
+            mask_src_intro_list = [~(src_intro == self.PAD_ID) for src_intro in src_intro_list]
             mask_tgt = ~(tgt == self.PAD_ID)
 
             clss = torch.tensor(self._pad(pre_clss, -1))
-            intro_clss = torch.tensor(self._pad(pre_intro_clss, -1))
+            intro_clss_list = [torch.tensor(self._pad(pre_intro_clss, -1)) for pre_intro_clss in pre_intro_clss_list]
 
             src_sent_rg = torch.tensor(self._pad(pre_src_sent_rg, 0))
 
             sent_labels = torch.tensor(self._pad(pre_sent_labels, 0))
-            intro_sent_labels = torch.tensor(self._pad(pre_intro_sent_labels, 0))
+            intro_sent_labels_list = [torch.tensor(self._pad(pre_intro_sent_labels, 0))
+                                 for pre_intro_sent_labels in pre_intro_sent_labels_list]
 
             # for int identifier
             sent_sect_labels = torch.tensor(self._pad(sent_sect_labels, 0))
@@ -120,26 +121,37 @@ class Batch(object):
             mask_cls = ~(clss == -1)
             clss[clss == -1] = 0
 
-            mask_intro_cls = ~(intro_clss == -1)
-            intro_clss[intro_clss == -1] = 0
+            mask_intro_cls_list = [~(intro_clss == -1) for intro_clss in intro_clss_list]
+
+            for intro_clss in intro_clss_list:
+                intro_clss[intro_clss == -1] = 0
 
 
             setattr(self, 'clss', clss.to(device))
-            setattr(self, 'intro_clss', intro_clss.to(device))
+
+            setattr(self, 'intro_clss', [intro_clss.to(device)
+                                         for intro_clss in intro_clss_list])
+
             setattr(self, 'mask_cls', mask_cls.to(device))
-            setattr(self, 'mask_intro_cls', mask_intro_cls.to(device))
+            setattr(self, 'mask_intro_cls', [mask_intro_cls.to(device)
+                                             for mask_intro_cls in mask_intro_cls_list])
 
             setattr(self, 'src_sent_rg', src_sent_rg.to(device))
             setattr(self, 'sent_labels', sent_labels.to(device))
-            setattr(self, 'intro_sent_labels', intro_sent_labels.to(device))
+            setattr(self, 'intro_sent_labels', [intro_sent_labels.to(device)
+                                                for intro_sent_labels in intro_sent_labels_list])
             # setattr(self, 'section_rg', section_rg.to(device))
 
             setattr(self, 'src', src.to(device))
-            setattr(self, 'src_intro', src_intro.to(device))
+            setattr(self, 'src_intro', [src_intro.to(device)
+                                        for src_intro in src_intro_list])
             setattr(self, 'tgt', tgt.to(device))
             setattr(self, 'segs', segs.to(device))
             setattr(self, 'mask_src', mask_src.to(device))
-            setattr(self, 'mask_src_intro', mask_src_intro.to(device))
+
+            setattr(self, 'mask_src_intro', [mask_src_intro.to(device)
+                                             for mask_src_intro in mask_src_intro_list])
+
             setattr(self, 'mask_tgt', mask_tgt.to(device))
 
             # for int identifier
@@ -324,16 +336,16 @@ class DataIterator(object):
 
     def preprocess(self, ex, is_test):
         src = ex['src']
-        src_intro = ex['src_intro']
+        src_intro_list = ex['src_intro_list']
         tgt = ex['tgt'][:self.args.max_tgt_len][:-1] + [2]
         src_sent_rg = ex['src_sent_rg']
         sent_labels = ex['sent_labels']
-        intro_sent_labels = ex['intro_labels']
+        intro_sent_labels_list = ex['intro_labels_list']
         segs = ex['segs']
         if (not self.args.use_interval):
             segs = [0] * len(segs)
         clss = ex['clss']
-        intro_clss = ex['intro_cls_ids']
+        intro_clss_list = ex['intro_cls_ids_list']
         src_txt = ex['src_txt']
 
         if "sent_numbers" in ex.keys():
@@ -366,15 +378,24 @@ class DataIterator(object):
 
         end_id = [src[-1]]
         src = src[:-1][:self.args.max_pos - 1] + end_id
-        src_intro = src_intro[:-1][:self.args.max_pos_intro - 1] + end_id
+
+        src_intro_list = [src_intro[:-1][:self.args.max_pos_intro - 1] + end_id for src_intro in src_intro_list]
+
         segs = segs[:self.args.max_pos]
         max_sent_id = bisect.bisect_left(clss, self.args.max_pos)
-        max_sent_id_intro = bisect.bisect_left(intro_clss, self.args.max_pos_intro)
+
+
+        max_sent_id_intro_list = [bisect.bisect_left(intro_clss, self.args.max_pos_intro) for intro_clss in intro_clss_list]
+
         src_sent_rg = src_sent_rg[:max_sent_id]
         sent_labels = sent_labels[:max_sent_id]
-        intro_sent_labels = intro_sent_labels[:max_sent_id_intro]
+        intro_sent_labels_list = [intro_sent_labels[:max_sent_id_intro_list[idx]]
+                                  for idx, intro_sent_labels in enumerate(intro_sent_labels_list)]
         clss = clss[:max_sent_id]
-        intro_clss = intro_clss[:max_sent_id_intro]
+
+        intro_clss_list = [intro_clss[:max_sent_id_intro_list[idx]]
+                                  for idx, intro_clss in enumerate(intro_clss_list)]
+
         src_txt = src_txt[:max_sent_id]
         if sent_sections_txt is not None:
             sent_sections_txt = sent_sections_txt[:max_sent_id]
@@ -384,9 +405,9 @@ class DataIterator(object):
 
         if (is_test):
             return src, tgt, segs, clss, src_sent_rg, sent_labels, src_txt, tgt_txt, sent_sect_labels, paper_id, section_rg, sent_sections_txt, sent_sect_wise_rg, \
-                   sent_numbers, sent_token_count, src_intro, intro_clss, intro_sent_labels
+                   sent_numbers, sent_token_count, src_intro_list, intro_clss_list, intro_sent_labels_list
         else:
-            return src, tgt, segs, clss, src_sent_rg, sent_labels, sent_sect_labels, paper_id, src_txt, sent_sections_txt, sent_numbers, sent_token_count, src_intro, intro_clss, intro_sent_labels
+            return src, tgt, segs, clss, src_sent_rg, sent_labels, sent_sect_labels, paper_id, src_txt, sent_sections_txt, sent_numbers, sent_token_count, src_intro_list, intro_clss_list, intro_sent_labels_list
 
     def batch_buffer(self, data, batch_size):
         minibatch, size_so_far = [], 0

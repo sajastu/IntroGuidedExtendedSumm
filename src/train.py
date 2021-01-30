@@ -124,6 +124,7 @@ if __name__ == '__main__':
     parser.add_argument("-test_start_from", default=-1, type=int)
 
     parser.add_argument("-train_from", default='')
+    parser.add_argument("-pretrained_intro_enc", default='')
     parser.add_argument("-exp_set", default='')
     parser.add_argument("-gd_cells_rg", default='', required=True)
     parser.add_argument("-gd_cell_step", default='', required=True)

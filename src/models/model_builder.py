@@ -155,7 +155,12 @@ class Bert(nn.Module):
                 # import pdb;
                 # pdb.set_trace()
                 global_mask = torch.zeros(mask_src.shape, dtype=torch.long, device='cuda').unsqueeze(0)
-                global_mask[:, :, clss.long()] = 1
+
+                try:
+                    global_mask[:, :, clss.long()] = 1
+                except:
+                    import pdb;
+                    pdb.set_trace()
                 global_mask = global_mask.squeeze(0)
                 top_vec = self.model(x, attention_mask=mask_src.long(), global_attention_mask=global_mask)['last_hidden_state']
 
@@ -213,8 +218,6 @@ class BertVanilla(nn.Module):
                 global_mask[:, :, [0]] = 1 # <s> or [cls] token
                 global_mask = global_mask.squeeze(0)
                 # import pdb;pdb.set_trace()
-                import pdb;
-                pdb.set_trace()
 
                 top_vec = self.model(x, attention_mask=mask_src.long(), global_attention_mask=global_mask)['last_hidden_state']
 
@@ -235,13 +238,13 @@ class BertVanilla(nn.Module):
 
 
 class ExtSummarizer(nn.Module):
-    def __init__(self, args, device, checkpoint, intro_cls=True, intro_sents_cls=False, intro_top_cls=False, num_intro_sample=5):
+    def __init__(self, args, device, checkpoint=None, checkpoint_intro=None, intro_cls=True, intro_sents_cls=False, intro_top_cls=False, num_intro_sample=5):
         super(ExtSummarizer, self).__init__()
         self.args = args
         self.num_intro_sample = num_intro_sample
         self.intro_cls = intro_cls
         self.sentence_encoder = SentenceEncoder(args, device, checkpoint)
-        self.sentence_encoder_intro = SentenceEncoder(args, device, checkpoint)
+        self.sentence_encoder_intro = SentenceEncoder(args, device, checkpoint_intro)
         self.sentence_predictor = SentenceExtLayer()
         self.intro_sentence_predictor = SentenceExtLayer()
         self.loss_sentence_picker = torch.nn.BCELoss(reduction='none')
@@ -253,6 +256,10 @@ class ExtSummarizer(nn.Module):
 
         if checkpoint is not None:
             self.load_state_dict(checkpoint['model'], strict=True)
+
+        if checkpoint_intro is not None:
+            self.sentence_encoder_intro.load_state_dict({k.replace("sentence_encoder.", ""):v for k, v in checkpoint_intro['model'].items() if k.startswith("sentence_encoder")}, strict=True)
+            self.intro_sentence_predictor.load_state_dict({k.replace("sentence_predictor.", ""):v for k, v in checkpoint_intro['model'].items() if 'sentence_predictor' in k}, strict=True)
 
         else:
             for p in self.sentence_predictor.parameters():
@@ -292,14 +299,33 @@ class ExtSummarizer(nn.Module):
 
     def forward(self, src, src_intro, segs, clss, intro_clss, mask_src, mask_src_intro, mask_cls, mask_intro_cls, sent_bin_labels, intro_sent_bin_labels, sent_sect_labels, p_id, is_inference=False,
                 return_encodings=False):
-
         source_sents_repr = self.sentence_encoder(src, segs, clss, mask_src, mask_cls)
-        intro_source_sents_repr = self.sentence_encoder_intro(src_intro, segs, intro_clss, mask_src_intro, mask_intro_cls)
 
-        # intro_repr = self.intro_cls_encoder(x=src_intro, segs=None, mask_src=mask_src_intro, mask_cls=mask_intro_cls, clss=intro_clss)
+        intro_source_sents_repr = torch.tensor([[[]]], dtype=torch.float64, device='cuda', requires_grad=False)
+        intro_scores = torch.tensor([[[]]], dtype=torch.float64, device='cuda', requires_grad=False)
+        for idx, s_intro in enumerate(src_intro[0]):
+            # if len(mask_src_intro[0][idx].size())==1:
+            #     import pdb;pdb.set_trace()
+            # import pdb;
+            # pdb.set_trace()
 
-        # intro_aware_repr = torch.cat((source_sents_repr, intro_repr.repeat(1, source_sents_repr.size(1), 1)), 2)
-        intro_sents_score = self.intro_sentence_predictor(intro_source_sents_repr, mask_intro_cls)
+            intro_source_sent_repr = self.sentence_encoder_intro(s_intro.unsqueeze(0),
+                                                                 segs,
+                                                                 intro_clss[0][idx].unsqueeze(0),
+                                                                 mask_src_intro[0][idx].unsqueeze(0),
+                                                                 mask_intro_cls[0][idx].unsqueeze(0))
+
+            intro_sent_score = self.intro_sentence_predictor(intro_source_sent_repr, mask_intro_cls[0][idx].unsqueeze(0))
+            intro_scores = torch.cat((intro_sent_score.unsqueeze(0), intro_scores), dim=2)
+
+            if idx == 0:
+                intro_source_sents_repr = intro_source_sent_repr
+
+            else:
+                import pdb;pdb.set_trace()
+                intro_source_sents_repr = torch.cat((intro_source_sents_repr, intro_source_sent_repr), dim=1)
+
+        import pdb;pdb.set_trace()
         intro_repr_topN = self._get_top_representations(self._get_topN_sents_ids(p_id, intro_sents_score, mask_intro_cls, self.num_intro_sample), intro_source_sents_repr)
         try:
             src_intro_guided = self.intro_combiner(intro_repr_topN, source_sents_repr)
@@ -329,7 +355,7 @@ class ExtSummarizer(nn.Module):
 
 
 class SentenceEncoder(nn.Module):
-    def __init__(self, args, device, checkpoint):
+    def __init__(self, args, device, checkpoint, is_intro_enc=False):
         super(SentenceEncoder, self).__init__()
         self.args = args
         self.device = device
@@ -338,6 +364,9 @@ class SentenceEncoder(nn.Module):
                                                            args.ext_heads,
                                                            args.ext_dropout, args.ext_layers)
 
+        # if checkpoint is not None:
+        #     self.load_state_dict(checkpoint['model'], strict=True)
+        self.is_intro_enc = is_intro_enc
         if args.max_pos > 512 and args.model_name == 'bert':
             my_pos_embeddings = nn.Embedding(args.max_pos, self.bert.model.config.hidden_size)
             import pdb;
@@ -359,16 +388,26 @@ class SentenceEncoder(nn.Module):
 
     def forward(self, src, segs, clss, mask_src, mask_cls):
         # self.eval()
-
-        top_vec = self.bert(src, segs, mask_src, mask_cls, clss)
-        # top_vec = checkpoint.checkpoint(
-        #     self.custom_sent_decider(self.bert),
-        #     src, segs, mask_src
-        # )
-        sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss.long()]
-        sents_vec = sents_vec * mask_cls[:, :, None].float()
-        encoded_sent = self.ext_transformer_layer(sents_vec, mask_cls)
-        # import pdb;pdb.set_trace()
+        if self.is_intro_enc:
+            with torch.no_grad:
+                top_vec = self.bert(src, segs, mask_src, mask_cls, clss)
+                # top_vec = checkpoint.checkpoint(
+                #     self.custom_sent_decider(self.bert),
+                #     src, segs, mask_src
+                # )
+                sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss.long()]
+                sents_vec = sents_vec * mask_cls[:, :, None].float()
+                encoded_sent = self.ext_transformer_layer(sents_vec, mask_cls)
+        else:
+            top_vec = self.bert(src, segs, mask_src, mask_cls, clss)
+            # top_vec = checkpoint.checkpoint(
+            #     self.custom_sent_decider(self.bert),
+            #     src, segs, mask_src
+            # )
+            sents_vec = top_vec[torch.arange(top_vec.size(0)).unsqueeze(1), clss.long()]
+            sents_vec = sents_vec * mask_cls[:, :, None].float()
+            encoded_sent = self.ext_transformer_layer(sents_vec, mask_cls)
+            # import pdb;pdb.set_trace()
         return encoded_sent
 
 
@@ -392,22 +431,30 @@ class IntroSentenceCombiner(nn.Module):
         return intro_aware_repr
 
 class SentenceExtLayer(nn.Module):
-    def __init__(self,):
+    def __init__(self, is_intro_predictor=False):
         super(SentenceExtLayer, self).__init__()
         # self.combiner = nn.Linear(1536, 768)
+        self.is_intro_predictor = is_intro_predictor
         self.wo = nn.Linear(768, 1, bias=True)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x, mask):
         # sent_scores = self.seq_model(x)
+        if self.is_intro_predictor:
+            sent_scores = self.sigmoid(self.wo(x))
 
+            # modules = [module for k, module in self.seq_model._modules.items()]
+            # input_var = torch.autograd.Variable(x, requires_grad=True)
+            # sent_scores = checkpoint_sequential(modules, 2, input_var)
+            sent_scores = sent_scores.squeeze(-1) * mask.float()
         # sent_scores = self.sigmoid(self.wo(self.combiner(x)))
-        sent_scores = self.sigmoid(self.wo(x))
+        else:
+            sent_scores = self.sigmoid(self.wo(x))
 
-        # modules = [module for k, module in self.seq_model._modules.items()]
-        # input_var = torch.autograd.Variable(x, requires_grad=True)
-        # sent_scores = checkpoint_sequential(modules, 2, input_var)
-        sent_scores = sent_scores.squeeze(-1) * mask.float()
+            # modules = [module for k, module in self.seq_model._modules.items()]
+            # input_var = torch.autograd.Variable(x, requires_grad=True)
+            # sent_scores = checkpoint_sequential(modules, 2, input_var)
+            sent_scores = sent_scores.squeeze(-1) * mask.float()
 
         return sent_scores
 

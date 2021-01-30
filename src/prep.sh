@@ -27,8 +27,8 @@
 # arxiv-long
 BASE_DIR=/disk1/sajad/datasets/sci/arxivL/
 RAW_PATH=$BASE_DIR/splits-with-sections-introConc/
-SAVE_JSON=$BASE_DIR/jsons/whole-introConc/
-BERT_DIR=$BASE_DIR/bert-files/intro2048-segmented-15-introConc/
+SAVE_JSON=$BASE_DIR/jsons/whole-introConc-15/
+BERT_DIR=$BASE_DIR/bert-files/intro2048-segmented-15-introConc-pretrainedIntroEnc/
 
 # csabs
 #BASE_DIR=/disk1/sajad/datasets/sci/csabs/
@@ -43,9 +43,9 @@ BERT_DIR=$BASE_DIR/bert-files/intro2048-segmented-15-introConc/
 #BERT_DIR=$BASE_DIR/bert-files/2500-whole-segmented-longformer/
 
 #
-echo "Starting to write aggregated json files..."
-echo "-----------------"
-#for SET in train
+#echo "Starting to write aggregated json files..."
+#echo "-----------------"
+#for SET in train test val
 #do
 #    python3 preprocess.py -mode format_to_lines \
 #                        -save_path $SAVE_JSON  \
@@ -61,8 +61,8 @@ echo "-----------------"
 echo "Now starting to write torch files..."
 echo "-----------------"
 
-#for SET in  test val
-for SET in train
+for SET in train test val
+#for SET in train
 do
     python3 preprocess.py -mode format_to_bert \
                         -bart \

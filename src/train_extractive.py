@@ -242,6 +242,17 @@ def train_single_ext(args, device_id, intro_cls=False, intro_sents_cls=False, in
     else:
         checkpoint = None
 
+    if args.pretrained_intro_enc != '':
+        logger.info('Loading Intro checkpoint from %s' % args.pretrained_intro_enc)
+        checkpoint_intro = torch.load(args.pretrained_intro_enc,
+                                map_location=lambda storage, loc: storage)
+        opt = vars(checkpoint_intro['opt'])
+        for k in opt.keys():
+            if (k in model_flags):
+                setattr(args, k, opt[k])
+    else:
+        checkpoint_intro = None
+
     def train_iter_fct():
         return data_loader.Dataloader(args, load_dataset(args, 'train', shuffle=False), args.batch_size, device,
                                       shuffle=True, is_test=False)
@@ -252,7 +263,7 @@ def train_single_ext(args, device_id, intro_cls=False, intro_sents_cls=False, in
         return data_loader.Dataloader(args, load_dataset(args, 'test', shuffle=False), args.test_batch_size, device,
                                       shuffle=False, is_test=True)
 
-    model = ExtSummarizer(args, device, checkpoint, intro_cls, intro_sents_cls, intro_top_cls)
+    model = ExtSummarizer(args, device, checkpoint, checkpoint_intro, intro_cls, intro_sents_cls, intro_top_cls)
     optim = model_builder.build_optim(args, model, checkpoint)
 
     logger.info(model)

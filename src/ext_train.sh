@@ -14,15 +14,15 @@ export N_SENTS=15
 export TRAINING_STEPS=100000
 export VAL_INTERVAL=5000
 
-METHOD=introG1536-IntroConc
-export CUDA_VISIBLE_DEVICES=0
+METHOD=introG1536-IntroConc-PretrainedIntroEnc
+export CUDA_VISIBLE_DEVICES=1
 
 MODEL_NAME=longformer
 MAX_POS=2048
-MAX_POS_INTRO=1536
+MAX_POS_INTRO=2048
 
 
-ROW_NUMBER=100
+ROW_NUMBER=103
 export GD_CELLS_RG_VAL=D$ROW_NUMBER:F$ROW_NUMBER
 export GD_CELLS_RG_TEST=H$ROW_NUMBER:J$ROW_NUMBER
 
@@ -37,7 +37,8 @@ BSZ=4000
 ##### Data #######
 ################################################################################
 
-DATA_PATH=/disk1/sajad/datasets/sci/$DATASET/bert-files/$MAX_POS-segmented-intro$MAX_POS_INTRO-$N_SENTS-introConc/
+#DATA_PATH=/disk1/sajad/datasets/sci/$DATASET/bert-files/$MAX_POS-segmented-intro$MAX_POS_INTRO-$N_SENTS-introConc-test/
+DATA_PATH=/disk1/sajad/datasets/sci/arxivL//bert-files/intro2048-segmented-15-introConc-pretrainedIntroEnc/
 ################################################################################
 ##### MODEL #######
 ################################################################################
@@ -110,6 +111,7 @@ else
                     -max_pos_intro $MAX_POS_INTRO\
                     -result_path_test $RESULT_PATH_TEST \
                     -accum_count 2 \
+                    -pretrained_intro_enc /disk1/sajad/sci-trained-models/presum/ARXIVL-2048-Intro-IntroConc/model_step_12500.pt
 #                    -train_from /disk1/sajad/sci-trained-models/presum/arxivL-2500-segmented-introG1536/model_step_4000.pt \
 
 fi
