@@ -156,13 +156,15 @@
 
 for SET in test
 do
-    for MT in multi
+    for MT in _base
     do
 
-        PRED_LEN=25
+        PRED_LEN=15
         METHOD=_base
 #        save_list_arxiv_long_test_sectioned_bertsum.p
-        SAVED_LIST=save_lists/pubmedL-$SET-longformer-$MT.p
+#        SAVED_LIST=save_lists/pubmedL-$SET-longformer-$MT.p
+        SAVED_LIST=/disk1/sajad/save_lists/arxivL-$SET-BertSumExt.p
+#        SAVED_LIST=/disk1/sajad/save_lists/arxivL-$SET-BertSumIntroGuided.p
 #        SAVED_LIST=save_lists/LSUM-$SET-sectioned-$MT.p
         C1=.8
         C2=0
@@ -173,8 +175,19 @@ do
                                 -set $SET \
                                 -method $METHOD \
                                 -pred_len $PRED_LEN \
-                                -saved_list $SAVED_LIST \
-                                -end
+                                -saved_list $SAVED_LIST
+
+
+        SAVED_LIST=/disk1/sajad/save_lists/arxivL-$SET-BertSumIntroGuided.p
+        python pick_mmr.py -co1 $C1 \
+                                -co2 $C2 \
+                                -co3 $C3 \
+                                -set $SET \
+                                -method $METHOD \
+                                -pred_len $PRED_LEN \
+                                -saved_list $SAVED_LIST
+
+
 
 
     #                            -cos \

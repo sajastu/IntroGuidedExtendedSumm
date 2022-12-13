@@ -6,19 +6,25 @@ from __future__ import division
 
 import argparse
 import glob
+from multiprocessing.pool import Pool
+
+import numpy as np
 import os
+import pickle
 import random
 import signal
 import time
 
 import torch
+from tqdm import tqdm
 
 import distributed
 from models import data_loader, model_builder
 from models.data_loader import load_dataset
 from models.model_builder import ExtSummarizer
-from models.trainer_ext import build_trainer
+from models.trainer_ext import build_trainer, _mult_top_sents
 from others.logging import logger, init_logger
+from prepro.data_builder import LongformerData
 
 model_flags = ['hidden_size', 'ff_size', 'heads', 'inter_layers', 'encoder', 'ff_actv', 'use_interval', 'rnn_size']
 
@@ -172,38 +178,145 @@ def validate(args, device_id, pt, step):
     stats = trainer.validate(valid_iter, step)
     return stats.total_loss()
 
+def test_ext_2nd_phase(args):
+    _picking_sentences_for_2nd_phase(args)
 
-def test_ext(args, device_id, pt, step, intro_cls=False, intro_sents_cls=False, intro_top_cls=False):
-    device = "cpu" if args.visible_gpus == '-1' else "cuda"
-    if (pt != ''):
-        test_from = pt
+def _picking_sentences_for_2nd_phase(args):
+    preds_sent_numbers = {}
+    saved_dict = {}
+    paper_sent_scores = []
+    logger.info("Picking top sentences for second phase...")
+    bert = LongformerData(args)
+
+    saved_dict_ = pickle.load(open(args.saved_list_name, 'rb'))
+
+    for p_idx, (p_id, (p_id, sent_scores, paper_src, paper_tgt, sent_sects_true,
+                       sent_sects_whole_true, sent_sections_txt_whole, sent_labels_true,
+                       sent_sect_wise_rg, sent_numbers)) in enumerate(saved_dict_.items()):
+        paper_sent_true_labels = np.array(sent_labels_true)
+        sent_scores = np.array(sent_scores)
+        p_src = np.array(paper_src)
+        # import pdb;
+        # pdb.set_trace()
+        p_sent_numbers = np.array(sent_numbers)
+
+
+        p_sent_sent_sects_true = np.array(sent_sects_true)
+
+        saved_dict[p_id] = (sent_scores, p_id, p_src, p_sent_numbers, p_sent_sent_sects_true)
+
+        keep_ids = [idx for idx, s in enumerate(p_src) if
+                    len(s.replace('.', '').replace(',', '').replace('(', '').replace(')', '').
+                        replace('-', '').replace(':', '').replace(';', '').replace('*', '').split()) > 5 and
+                    len(s.replace('.', '').replace(',', '').replace('(', '').replace(')', '').
+                        replace('-', '').replace(':', '').replace(';', '').replace('*', '').split()) < 120
+                    ]
+
+        keep_ids = sorted(keep_ids)
+
+        # top_sent_indexes = top_sent_indexes[top_sent_indexes]
+        p_src = p_src[keep_ids]
+        p_sent_numbers = p_sent_numbers[keep_ids]
+        # p_sent_tokens_count = p_sent_tokens_count[keep_ids]
+        sent_scores = sent_scores[keep_ids]
+        p_sent_sent_sects_true = p_sent_sent_sects_true[keep_ids]
+        paper_sent_true_labels = paper_sent_true_labels[keep_ids]
+        # sent_true_labels = sent_true_labels[keep_ids]
+
+        # sent_scores = np.asarray([s - 1.00 for s in sent_scores])
+
+        paper_sent_scores.append((sent_scores, p_id, p_src, p_sent_numbers, p_sent_sent_sects_true,
+                                  paper_sent_true_labels, bert, "normal"))
+
+    # pickle.dump(paper_sent_scores, open(self.args.saved_list_name.replace('.p', '-sent-scores.p'), "wb"))
+    # paper_sent_scores = pickle.load(open(self.args.saved_list_name.replace('.p', '-sent-scores.p'),'rb'))
+
+    overall_recall1, preds_sent_numbers = extract_top_sents(args, paper_sent_scores)
+
+    logger.info("Recall-top section stat: %4.4f" % (overall_recall1))
+
+    # new_sents = []
+    # for p in paper_sent_scores:
+    #     new_sents.append(p[:-1] + ("normal",))
+    # overall_recall2, preds_sent_numbers = self.extract_top_sents(new_sents)
+    # logger.info("Recall-top normal: %4.4f" % (overall_recall2))
+    #
+    # new_sents = []
+    # for p in paper_sent_scores:
+    #     new_sents.append(p[:-1] + ("section-equal",))
+    # overall_recall3, preds_sent_numbers = self.extract_top_sents(new_sents)
+    # logger.info("Recall-top section equal: %4.4f" % (overall_recall3))
+    #
+
+    # overall_recall2, overall_recall3 = 0, 0
+    # stats.set_overall_recall(overall_recall1, overall_recall2, overall_recall3)
+
+
+    # if write_scores_to_pickle:
+    pickle.dump(preds_sent_numbers,
+                open(args.saved_list_name.replace('.p', '-top-sents.p'), "wb"))
+
+def extract_top_sents(self, paper_sent_scores):
+    preds_sent_numbers = {}
+    recalls = []
+
+    # for idx, p in tqdm(enumerate(paper_sent_scores), total=len(paper_sent_scores)):
+    #     # if idx>2485:
+    #     a, b, c = _mult_top_sents(p, idx)
+    #     preds_sent_numbers[a] = b
+    #     recalls.append(c)
+
+    pool = Pool(24)
+    for d in tqdm(pool.imap_unordered(_mult_top_sents, paper_sent_scores), total=len(paper_sent_scores)):
+        preds_sent_numbers[d[0]] = d[1]
+        recalls.append(d[2])
+    pool.close()
+    pool.join()
+
+    recalls = np.array(recalls)
+    overall_recall = np.mean(recalls)
+
+    return overall_recall, preds_sent_numbers
+
+
+def test_ext(args, device_id, pt, step, intro_cls=False, intro_sents_cls=False, intro_top_cls=False, pick_top=False):
+    pick_top = args.pick_top
+
+    if pick_top:
+        test_ext_2nd_phase(args)
+
     else:
-        test_from = args.test_from
-    logger.info('Loading checkpoint from %s' % test_from)
-    checkpoint = torch.load(test_from, map_location=lambda storage, loc: storage)
-    opt = vars(checkpoint['opt'])
-    for k in opt.keys():
-        if (k in model_flags):
-            setattr(args, k, opt[k])
-    print(args)
 
-    def test_iter_fct():
-        return data_loader.Dataloader(args, load_dataset(args, args.exp_set, shuffle=False), args.test_batch_size, device,
-                                      shuffle=False, is_test=True)
+        device = "cpu" if args.visible_gpus == '-1' else "cuda"
+        if (pt != ''):
+            test_from = pt
+        else:
+            test_from = args.test_from
+        logger.info('Loading checkpoint from %s' % test_from)
+        checkpoint = torch.load(test_from, map_location=lambda storage, loc: storage)
+        opt = vars(checkpoint['opt'])
+        for k in opt.keys():
+            if (k in model_flags):
+                setattr(args, k, opt[k])
+        print(args)
 
-    model = ExtSummarizer(args, device, checkpoint, intro_cls=intro_cls)
-    model.eval()
+        def test_iter_fct():
+            return data_loader.Dataloader(args, load_dataset(args, args.exp_set, shuffle=False), args.test_batch_size, device,
+                                          shuffle=False, is_test=True)
 
-    # test_iter = data_loader.Dataloader(args, load_dataset(args, 'test', shuffle=False),
-    #                                    args.test_batch_size, device,
-    #                                    shuffle=False, is_test=True)
-    trainer = build_trainer(args, device_id, model, None)
-    # trainer.test(test_iter, step)
-    # trainer.test(test_iter_fct, step)
-    # trainer.validate_rouge_mmr(test_iter_fct, step)
-    # trainer.validate_rouge(test_iter_fct, step)
-    trainer.validate_rouge_baseline(test_iter_fct, step, write_scores_to_pickle=True)
-    # trainer.validate_cls(test_iter_fct, step)
+        model = ExtSummarizer(args, device, checkpoint, intro_cls=intro_cls)
+        model.eval()
+
+        # test_iter = data_loader.Dataloader(args, load_dataset(args, 'test', shuffle=False),
+        #                                    args.test_batch_size, device,
+        #                                    shuffle=False, is_test=True)
+        trainer = build_trainer(args, device_id, model, None)
+        # trainer.test(test_iter, step)
+        # trainer.test(test_iter_fct, step)
+        # trainer.validate_rouge_mmr(test_iter_fct, step)
+        # trainer.validate_rouge(test_iter_fct, step)
+        trainer.validate_rouge_baseline(test_iter_fct, step, write_scores_to_pickle=True)
+        # trainer.validate_cls(test_iter_fct, step)
 
 def train_ext(args, device_id, intro_cls=False, intro_sents_cls=False, intro_top_cls=False):
     if (args.world_size > 1):

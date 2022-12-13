@@ -5,7 +5,7 @@ import math
 import os
 import pickle
 import traceback
-from collections import Counter
+from collections import Counter, OrderedDict
 from multiprocessing.pool import Pool
 
 import matplotlib.pyplot as plt
@@ -546,6 +546,14 @@ def _mmr(params):
                      F])
         return [val["sentence"] for s, val in pred_dict.items()], paper_tgt, p_id,r1, r2, rl
 
+class OrderedCounter(Counter, OrderedDict):
+    'Counter that remembers the order elements are first encountered'
+
+    def __repr__(self):
+        return '%s(%r)' % (self.__class__.__name__, OrderedDict(self))
+
+    def __reduce__(self):
+        return self.__class__, (OrderedDict(self),)
 
 def _base(params):
 
@@ -597,6 +605,15 @@ def _base(params):
                 break
 
         selected_idx = [s[1] for s in _pred]
+        selected_idx = sorted(selected_idx)
+        section_counter = OrderedCounter(section_textual)
+
+        selected_idx_disply = []
+
+        for s in selected_idx:
+            selected_idx_disply.append(str(s) + ' [{}]'.format(section_textual[s]))
+
+
         sections = [s[2] for s in sorted(_pred, key=lambda x: x[1])]
         F, prec, rec = _get_precision_(sent_true_labels, selected_idx)
         # print(F)
@@ -620,22 +637,38 @@ def _base(params):
         # oracle_idx = [str(idx) + ' (' + str(sent_scores[idx]) + ', ' + str(sent_sects_whole_true[idx]) + ')' for idx, s in enumerate(paper_srcs) if sent_true_labels[idx] == 1]
 
         oracle_idx = sorted([idx for idx, s in enumerate(paper_srcs) if sent_true_labels[idx] == 1])
-        oracle = ' '.join([s for s in paper_srcs[sorted(selected_idx)]])
+        oracle_idx_display = []
+        for o in oracle_idx:
+            oracle_idx_display.append(str(o) + " [{}]".format(section_textual[o]))
 
-        instance={'p_id':p_id, 'pred':oracle, 'gold':paper_tgt}
+        # pred = ' '.join([s for s in paper_srcs[sorted(selected_idx)]])
+        # oracle = ' '.join([s for s in paper_srcs[sorted(oracle_idx)]])
+
+        pred = ''
+        oracle = ''
+
+        for s in  sorted(selected_idx):
+            pred += paper_srcs[s] + "[{}]".format(section_textual[s])
+            pred += ' '
+
+        for s in  sorted(oracle_idx):
+            oracle += paper_srcs[s] + "[{}]".format(section_textual[s])
+            oracle += ' '
+
+        instance = {'p_id':p_id, 'oracle':oracle,  'pred':pred, 'gold':paper_tgt}
 
         # visualize_heatmap(data=np.array(sent_scores), p_id=p_id, y_labels=[],
         #                   x_labels=[i for i in range(len(paper_srcs))], oracle_idxs=oracle_idx,
         #                   summary_idx=sorted(selected_idx), sect_lens=[], bs_selected_ids=[], filename=filename)
 
         if len(filename) > 0:
-            with open('mmr_outputs/' + filename + '.csv', 'a', newline='') as file:
+            with open('anal_outputs/' + filename + '.samples.csv', 'a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow([str(p_id),
                                  # str(' '.join([('[%d: %s (%4.4f) ––%s' % (s[1], s[0], s[3], s[2])) for s in sorted(_pred,  key= lambda x : x[1])])),
                                  pretty_json,
-                                 str(sorted(selected_idx)),
-                                 str(oracle_idx),
+                                 str(selected_idx_disply),
+                                 str(oracle_idx_display),
                                  str([str(s) for s in sections]),
                                  str(oracle_sects),
                                  # intersection(Counter(sections), Counter(oracle_sects)),
@@ -643,7 +676,10 @@ def _base(params):
                                  r1,
                                  r2,
                                  rl,
-                                 F]
+                                 F,
+                                 pred,
+                                 oracle,
+                                 paper_tgt]
                                 )
 
         return [s[0] for s in sorted(_pred, key=lambda x: x[1])], paper_tgt, p_id, r1, r2, rl, instance.copy()
@@ -677,30 +713,20 @@ if __name__ == '__main__':
 
     # filename = ""
 
-    if 'base' in args.method:
-        filename = "results_" + args.saved_list.replace("save_lists/", "")
-    else:
-        filename = "results_" + args.saved_list.replace("save_lists/", "") + f"_{args.co3}"
+    filename = "results_" + args.saved_list.replace("/disk1/sajad/save_lists/", "")
 
     ########### ########### ########### ###########
     ########### ########### ########### ###########
     if len(filename) > 0:
-        with open('mmr_outputs/' + filename + '.csv', 'w', newline='') as file:
+        with open('anal_outputs/' + filename + '.samples.csv', 'w', newline='') as file:
             # with open('mmr_outputs/sections_multi_{}_arxivmain.csv'.format(args.co3), 'a', newline='') as file:
             writer = csv.writer(file)
-            if 'mmr' in args.method:
-                writer.writerow(["paper_id", "our Pred", "our pred_idx", "oracle pred idx", "our Section", "Oracle sects", "our Overlap", "our RG-1", "our RG-2", "our RG-L", "our F"])
-            else:
-                writer.writerow(
-                    ["paper_id", "bs Pred", "bs pred_idx", "oracle pred idx", "bs section", "Oracle sects", "bs Overlap",
-                     "bs RG-1", "bs RG-2", "bs RG-L", "bs F"]
-                )
+            writer.writerow(
+                ["paper_id", "Pred", "pred_idx", "oracle pred idx", "section", "Oracle sects", "Overlap",
+                 "RG-1", "RG-2", "RG-L", "F", "pred_txt", "oracle_txt", "paper_tgt"]
+            )
 
     saved_list = pickle.load(open(args.saved_list, "rb"))
-
-    if args.cos:
-        sentence_encodings = pickle.load(open("save_lists/embs-" + args.saved_list.replace("save_lists/", ""), "rb"))
-
 
     preds = {}
     golds = {}
@@ -708,19 +734,27 @@ if __name__ == '__main__':
     golds1 = {}
     a_lst = []
 
+    sample_papers = []
+    with open("arxivL-samples.txt") as F:
+        for l in F:
+            sample_papers.append(l.strip())
     for s, val in tqdm(saved_list.items(), total=len(saved_list)):
-        # if val[0] == 'astro-ph9807040':
+        if val[0] in sample_papers:
         #     if args.cos:
         #         val = val + (sentence_encodings[val[0]], args.co1, args.co2, args.co3, args.cos, PRED_LEN, filename)
         #     else:
         #         val = val + (None, args.co1, args.co2, args.co3, args.cos, PRED_LEN, filename)
         #     a_lst.append((val))
 
-        if args.cos:
-            val = val + (sentence_encodings[val[0]], args.co1, args.co2, args.co3, args.cos, PRED_LEN, filename)
-        else:
             val = val + (None, args.co1, args.co2, args.co3, args.cos, PRED_LEN, filename)
-        a_lst.append((val))
+            a_lst.append((val))
+
+        else:
+            for s in sample_papers:
+                if str(s) in str(val[0]):
+                    val = val + (None, args.co1, args.co2, args.co3, args.cos, PRED_LEN, filename)
+                    a_lst.append((val))
+
 
     #     d = _base(a_lst[-1])
         # d = _mmr((val))
@@ -730,19 +764,24 @@ if __name__ == '__main__':
     golds = {}
     sent_len = []
     instances = []
+
     rouge_scores = {"r1": [], "r2": [], "rl": []}
-    for d in tqdm(pool.imap(eval(args.method), a_lst), total=len(a_lst)):
-        if d is not None:
-            p_id = d[2]
-            preds[p_id] = d[0]
-            golds[p_id] = d[1]
-            rouge_scores["r1"].append(d[3])
-            rouge_scores["r2"].append(d[4])
-            rouge_scores["rl"].append(d[5])
-            instance = d[-1]
-            instances.append(instance)
-    pool.close()
-    pool.join()
+
+    for a in a_lst:
+        _base(a)
+
+    # for d in tqdm(pool.imap(eval(args.method), a_lst), total=len(a_lst)):
+    #     if d is not None:
+    #         p_id = d[2]
+    #         preds[p_id] = d[0]
+    #         golds[p_id] = d[1]
+    #         rouge_scores["r1"].append(d[3])
+    #         rouge_scores["r2"].append(d[4])
+    #         rouge_scores["rl"].append(d[5])
+    #         instance = d[-1]
+    #         instances.append(instance)
+    # pool.close()
+    # pool.join()
 
     with open('txt_out/' + filename + '.json', mode='w') as F:
         for instance in instances:

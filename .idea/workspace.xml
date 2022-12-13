@@ -1,137 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="5f5aa255-6b0b-4152-a31e-aa948c8038a4" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/bert_to_txt.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/bert_to_single_files.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/utils/remove_dup_papers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/generated_predictions.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/sampling_csv.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/anal_last.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/output_intro_to_text.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/IntroGuidedExtendedSumm.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/IntroGuidedExtendedSumm.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/analyse/section_dist.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/calculate_oracle_from_bertfiles.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/calculate_oracle_from_bertfiles.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/change_labels_sequential.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/change_labels_sequential.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/convert_bert_data_to_sequential.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/convert_bert_data_to_sequential.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bert_to_txt.py" beforeDir="false" afterPath="$PROJECT_DIR$/bert_to_txt.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ext_test.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/ext_test.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ext_train.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/ext_train.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/mmr_run.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/mmr_run.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/models/data_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/data_loader.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/models/model_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/model_builder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/reporter_ext.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/reporter_ext.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/models/trainer_ext.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/trainer_ext.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/modify_sent_labels_bertfiles.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/modify_sent_labels_bertfiles.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/post_process_bert.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/post_process_bert.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pick_mmr.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/pick_mmr.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/prep.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/prep.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/prepro/data_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/prepro/data_builder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/preprocess.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/preprocess.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/train_extractive.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/train_extractive.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/rouge_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/rouge_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/oracle_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/oracle_utils.py" afterDir="false" />
     </list>
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
+    <SUITE FILE_PATH="coverage/IntroGuidedExtendedSumm$ds_stats.coverage" NAME="ds_stats Coverage Results" MODIFIED="1621554077339" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/datasets-raw" />
+    <SUITE FILE_PATH="coverage/IntroGuidedExtendedSumm$pick_for_anal.coverage" NAME="pick_for_anal Coverage Results" MODIFIED="1612079695091" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/IntroGuidedExtendedSumm$anal_stat.coverage" NAME="anal_stat Coverage Results" MODIFIED="1621630796391" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/datasets-raw" />
+    <SUITE FILE_PATH="coverage/IntroGuidedExtendedSumm$anal_last.coverage" NAME="anal_last Coverage Results" MODIFIED="1622062365926" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/utils" />
+    <SUITE FILE_PATH="coverage/IntroGuidedExtendedSumm$check_ds.coverage" NAME="check_ds Coverage Results" MODIFIED="1623259747147" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/IntroGuidedExtendedSumm$post_stats.coverage" NAME="post_stats Coverage Results" MODIFIED="1609823429940" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
-  </component>
-  <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/prep.sh">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="307">
-              <caret line="31" lean-forward="true" selection-start-line="31" selection-end-line="31" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/models/model_builder.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="269">
-              <caret line="374" column="39" lean-forward="true" selection-start-line="374" selection-start-column="39" selection-end-line="374" selection-end-column="39" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/modify_sent_labels_bertfiles.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="409">
-              <caret line="315" selection-start-line="315" selection-end-line="315" />
-              <folding>
-                <element signature="e#0#15#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/post_process_bert.sh">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="435">
-              <caret line="29" column="58" selection-start-line="29" selection-start-column="58" selection-end-line="29" selection-end-column="95" />
-              <folding>
-                <marker date="1611722785302" expanded="true" signature="576:1106" ph="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/ext_train.sh">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="390">
-              <caret line="26" column="49" selection-start-line="26" selection-start-column="49" selection-end-line="26" selection-end-column="49" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/utils/spreadsheet.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="720">
-              <caret line="49" column="9" selection-start-line="49" selection-start-column="9" selection-end-line="49" selection-end-column="9" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/utils/rouge_utils.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17475">
-              <caret line="1169" selection-start-line="1169" selection-end-line="1169" />
-              <folding>
-                <element signature="e#0#14#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/prepro/data_builder.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1232">
-              <caret line="920" column="12" lean-forward="true" selection-start-line="920" selection-start-column="12" selection-end-line="920" selection-end-column="12" />
-              <folding>
-                <element signature="e#0#9#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/bert_to_single_files.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="600">
-              <caret line="46" column="22" selection-start-line="46" selection-start-column="22" selection-end-line="46" selection-end-column="22" />
-              <folding>
-                <element signature="e#0#18#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <SUITE FILE_PATH="coverage/IntroGuidedExtendedSumm$oracle_utils.coverage" NAME="oracle_utils Coverage Results" MODIFIED="1622036448806" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/utils" />
+    <SUITE FILE_PATH="coverage/IntroGuidedExtendedSumm$sample_BertBart_anal.coverage" NAME="sample_BertBart_anal Coverage Results" MODIFIED="1623266388999" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -142,40 +51,59 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>validate_r</find>
-      <find>def _mult</find>
-      <find>def _save</find>
-      <find>intro_cl</find>
-      <find>max</find>
-      <find>use_interval</find>
-      <find>2</find>
-      <find>self.intro_cls</find>
-      <find>intro_cls</find>
-      <find>validate</find>
-      <find>src_sent_rg</find>
-      <find>get_eligible_section_ids</find>
-      <find>contr</find>
-      <find>papers_src</find>
-      <find>collection</find>
-      <find>defaultdict</find>
-      <find>out_sents_rg_scores1</find>
-      <find>sent_rg_scores</find>
-      <find>sent_sect_labels</find>
-      <find>format_to_bert</find>
-      <find>4</find>
-      <find>s</find>
-      <find>np_intro</find>
-      <find>8</find>
-      <find>is_idx_in_global</find>
-      <find>validate_rouge</find>
-      <find>MAX_POS</find>
-      <find>torch.save</find>
-      <find>intro</find>
-      <find>get_eligible_parts</find>
+      <find>sent_scores_whole</find>
+      <find>uv sp</find>
+      <find>the first time predictions of uv spectra</find>
+      <find>After the new concept to calculate</find>
+      <find>we have adopted relative</find>
+      <find>as has been shown</find>
+      <find>We also have to increase</find>
+      <find>roughly between 100 to 300</find>
+      <find>the goal of this paper is to investigate systematically</find>
+      <find>with our new approach to describe line driven stellar</find>
+      <find>The objective of the work presented here is to study</find>
+      <find>we have demonstrated that the normal scaling laws</find>
+      <find>e were able to disentangle</find>
+      <find>the heii ionizing photons</find>
+      <find>we learned that the presenc</find>
+      <find>we find these first st</find>
+      <find>as has been shown by</find>
+      <find>however , it is very likely that an early</find>
+      <find>num_intro_sample</find>
+      <find>preds_sent_numbers</find>
+      <find>sent_numbers_whole</find>
+      <find>bart</find>
+      <find>preprocess</find>
+      <find>format_to_line</find>
+      <find>there is a significant</find>
+      <find>format_to_lines_ba</find>
+      <find>_</find>
+      <find>abstrac</find>
+      <find>&quot;id&quot;</find>
+      <find>&quot;gold&quot;</find>
     </findStrings>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -183,7 +111,6 @@
         <option value="$PROJECT_DIR$/src/not-intro-l1.txt" />
         <option value="$PROJECT_DIR$/src/convert_bert_data_to_sequential.py" />
         <option value="$PROJECT_DIR$/src/sequential_output_combiner.py" />
-        <option value="$PROJECT_DIR$/src/train_extractive.py" />
         <option value="$PROJECT_DIR$/src/models/reporter_ext.py" />
         <option value="$PROJECT_DIR$/src/utils/remove_dup_papers.py" />
         <option value="$PROJECT_DIR$/src/calculate_oracle_from_bertfiles.py" />
@@ -191,20 +118,42 @@
         <option value="$PROJECT_DIR$/src/train.py" />
         <option value="$PROJECT_DIR$/src/change_labels_sequential.py" />
         <option value="$PROJECT_DIR$/src/sect_to_single_json.py" />
-        <option value="$PROJECT_DIR$/src/models/data_loader.py" />
-        <option value="$PROJECT_DIR$/src/models/trainer_ext.py" />
-        <option value="$PROJECT_DIR$/src/ext_test.sh" />
         <option value="$PROJECT_DIR$/src/check_intro_labels.py" />
         <option value="$PROJECT_DIR$/src/modify_sent_labels_bertfiles.py" />
         <option value="$PROJECT_DIR$/src/utils/rouge_utils.py" />
-        <option value="$PROJECT_DIR$/bert_to_txt.py" />
         <option value="$PROJECT_DIR$/src/bert_to_single_files.py" />
-        <option value="$PROJECT_DIR$/src/preprocess.py" />
         <option value="$PROJECT_DIR$/src/post_process_bert.sh" />
-        <option value="$PROJECT_DIR$/src/models/model_builder.py" />
         <option value="$PROJECT_DIR$/src/ext_train.sh" />
-        <option value="$PROJECT_DIR$/src/prepro/data_builder.py" />
+        <option value="$PROJECT_DIR$/bert_to_txt.py" />
+        <option value="$PROJECT_DIR$/src/arxivL-anal-paperIDs.txt" />
+        <option value="$PROJECT_DIR$/src/mmr_run.sh" />
+        <option value="$PROJECT_DIR$/src/pick_mmr.py" />
+        <option value="$PROJECT_DIR$/src/arxivL-samples.txt" />
+        <option value="$PROJECT_DIR$/src/pred_target.txt" />
+        <option value="$PROJECT_DIR$/src/pred_ours.txt" />
+        <option value="$PROJECT_DIR$/src/pred_bs.txt" />
+        <option value="$PROJECT_DIR$/src/pick_for_anal.py" />
+        <option value="$PROJECT_DIR$/src/arxivL-anal.json" />
+        <option value="$PROJECT_DIR$/src/datasets-raw/ds_stats.py" />
+        <option value="$PROJECT_DIR$/src/datasets-raw/anal_stat.py" />
+        <option value="$PROJECT_DIR$/src/models/data_loader.py" />
+        <option value="$PROJECT_DIR$/src/models/trainer_ext.py" />
+        <option value="$PROJECT_DIR$/src/train_extractive.py" />
+        <option value="$PROJECT_DIR$/src/preprocess.py" />
+        <option value="$PROJECT_DIR$/src/models/model_builder.py" />
         <option value="$PROJECT_DIR$/src/prep.sh" />
+        <option value="$PROJECT_DIR$/src/prepro/data_builder.py" />
+        <option value="$PROJECT_DIR$/src/utils/oracle_utils.py" />
+        <option value="$PROJECT_DIR$/src/utils/rouge_score.py" />
+        <option value="$PROJECT_DIR$/src/utils/anal_last.py" />
+        <option value="$PROJECT_DIR$/src/anal_rg.json" />
+        <option value="$PROJECT_DIR$/src/anal_last.py" />
+        <option value="$PROJECT_DIR$/sample_ids.py" />
+        <option value="$PROJECT_DIR$/src/sampling_100_ids.py" />
+        <option value="$PROJECT_DIR$/src/ext_test.sh" />
+        <option value="$PROJECT_DIR$/src/create_sample_bart_bert.py" />
+        <option value="$PROJECT_DIR$/src/check_ds.py" />
+        <option value="$PROJECT_DIR$/src/sample_BertBart_anal.py" />
       </list>
     </option>
   </component>
@@ -216,9 +165,10 @@
   </component>
   <component name="ProjectFrameBounds">
     <option name="y" value="23" />
-    <option name="width" value="1920" />
-    <option name="height" value="1002" />
+    <option name="width" value="1440" />
+    <option name="height" value="820" />
   </component>
+  <component name="ProjectId" id="1xE8nNfkqWIqOguiOod2GjKojdF" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
@@ -231,11 +181,6 @@
               <item name="IntroGuidedExtendedSumm" type="b2602c69:ProjectViewProjectNode" />
               <item name="IntroGuidedExtendedSumm" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="IntroGuidedExtendedSumm" type="b2602c69:ProjectViewProjectNode" />
-              <item name="IntroGuidedExtendedSumm" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
           </expand>
           <select />
         </subPane>
@@ -243,33 +188,32 @@
       <pane id="Scope" />
     </panes>
   </component>
-  <component name="PropertiesComponent">
-    <property name="SearchEverywhereHistoryKey" value="exttr&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/ext_train.sh&#10;model&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/model_builder.py&#10;prep&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/preprocess.py&#10;modif&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/modify_sent_labels_bertfiles.py&#10;pre&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/prep.sh&#10;data&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/prepro/data_builder.py&#10;roug&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/utils/rouge_utils.py&#10;posp&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/post_process_bert.sh&#10;modifyla&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/modify_sent_labels_bertfiles.py&#10;train&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/train.py&#10;test&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/ext_test.sh&#10;trainer&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/trainer_ext.py&#10;dataloa&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/data_loader.py&#10;extr&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/ext_train.sh&#10;datab&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/prepro/data_builder.py&#10;prep.&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/prep.sh&#10;rouge&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/utils/rouge_utils.py&#10;databui&#9;null&#9;null&#10;calc&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/calculate_oracle_from_bertfiles.py&#10;exttra&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/ext_train.sh&#10;pos&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/post_process_bert.sh&#10;json&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/sect_to_single_json.py&#10;trainere&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/trainer_ext.py&#10;extt&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/ext_train.sh&#10;modify_sent_labels_bertfiles&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/modify_sent_labels_bertfiles.py&#10;DATA&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/data_loader.py&#10;utils&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/utils/rouge_utils.py&#10;post&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/post_process_bert.sh&#10;prep.s&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/prep.sh&#10;change_labels_sequential&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/change_labels_sequential.py&#10;calculate_oracle_from_bertfiles&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/calculate_oracle_from_bertfiles.py&#10;datalo&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/data_loader.py&#10;prepr&#9;null&#9;null&#10;ca&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/calculate_oracle_from_bertfiles.py&#10;databu&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/prepro/data_builder.py&#10;reporter&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/reporter_ext.py&#10;mode&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/models/model_builder.py&#10;convert_bert_data_to_sequential&#9;FILE&#9;file:///Users/ss4164/PycharmProjects/IntroGuidedExtendedSumm/src/convert_bert_data_to_sequential.py&#10;conver&#9;null&#9;null&#10;rougeuti&#9;null&#9;null&#10;modelbu&#9;null&#9;null" />
-    <property name="WebServerToolWindowFactoryState" value="true" />
-    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
-    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="web.server" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
   </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "WebServerToolWindowFactoryState": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)"
+  }
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/utils" />
       <recent name="$PROJECT_DIR$" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/src/datasets-raw/pubmedL" />
+    </key>
   </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
-  </component>
-  <component name="RunManager">
-    <configuration name="post_stats" type="PythonConfigurationType" factoryName="Python" temporary="true">
+  <component name="RunManager" selected="Python.output_intro_to_text">
+    <configuration name="check_ds" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="IntroGuidedExtendedSumm" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -282,7 +226,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/post_stats.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/check_ds.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -291,12 +235,112 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="output_intro_to_text" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="IntroGuidedExtendedSumm" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/output_intro_to_text.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="sample-nes" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="IntroGuidedExtendedSumm" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/sample-nes.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="sample_BertBart_anal" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="IntroGuidedExtendedSumm" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/sample_BertBart_anal.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="sampling_csv" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="IntroGuidedExtendedSumm" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sampling_csv.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.check_ds" />
+      <item itemvalue="Python.sample_BertBart_anal" />
+      <item itemvalue="Python.sampling_csv" />
+      <item itemvalue="Python.sample-nes" />
+      <item itemvalue="Python.output_intro_to_text" />
+    </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.post_stats" />
+        <item itemvalue="Python.output_intro_to_text" />
+        <item itemvalue="Python.sample-nes" />
+        <item itemvalue="Python.sampling_csv" />
+        <item itemvalue="Python.sample_BertBart_anal" />
+        <item itemvalue="Python.check_ds" />
       </list>
     </recent_temporary>
   </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -307,28 +351,43 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1607902935045</updated>
+      <workItem from="1629909062503" duration="3451000" />
+      <workItem from="1629923517673" duration="1503000" />
+      <workItem from="1630188950177" duration="2441000" />
+      <workItem from="1630513474852" duration="4018000" />
+      <workItem from="1631141483981" duration="2756000" />
+      <workItem from="1631317526007" duration="6766000" />
+      <workItem from="1631944530710" duration="1789000" />
+      <workItem from="1632216073916" duration="1976000" />
+      <workItem from="1632295897545" duration="594000" />
+      <workItem from="1632422516284" duration="395000" />
+      <workItem from="1632423088861" duration="48000" />
+      <workItem from="1640105337489" duration="24000" />
+      <workItem from="1640127669240" duration="19000" />
+      <workItem from="1642258537302" duration="4510000" />
+      <workItem from="1670541945740" duration="6383000" />
     </task>
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1920" height="1002" extended-state="0" />
+    <frame x="0" y="23" width="1440" height="820" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49868765" visible="true" weight="0.16453674" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49868765" visible="true" weight="0.28826895" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" sideWeight="0.5013123" side_tool="true" weight="0.1996805" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32857144" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49946752" weight="0.20989011" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49946752" visible="true" weight="0.07554945" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4065934" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="8" weight="0.32967034" />
-      <window_info anchor="bottom" id="File Transfer" order="9" visible="true" weight="0.032967035" />
+      <window_info anchor="bottom" id="File Transfer" order="9" weight="0.03846154" />
       <window_info anchor="bottom" id="Database Changes" order="10" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Terminal" order="11" sideWeight="0.49946752" weight="0.42527473" />
+      <window_info anchor="bottom" id="Terminal" order="11" sideWeight="0.49946752" weight="0.13186814" />
       <window_info anchor="bottom" id="Event Log" order="12" sideWeight="0.5005325" side_tool="true" weight="0.32967034" />
       <window_info anchor="bottom" id="Python Console" order="13" />
       <window_info anchor="bottom" id="Concurrent Activities Diagram" order="14" weight="0.32967034" />
@@ -373,13 +432,67 @@
     </layout-to-restore>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
-  </component>
-  <component name="VcsContentAnnotationSettings">
-    <option name="myLimit" value="2678400000" />
+    <option name="version" value="3" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/pick_for_anal.py</url>
+          <line>20</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/datasets-raw/ds_stats.py</url>
+          <line>75</line>
+          <option name="timeStamp" value="13" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/datasets-raw/ds_stats.py</url>
+          <line>98</line>
+          <option name="timeStamp" value="20" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/datasets-raw/anal_stat.py</url>
+          <line>28</line>
+          <option name="timeStamp" value="24" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/anal_last.py</url>
+          <line>12</line>
+          <option name="timeStamp" value="25" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/check_ds.py</url>
+          <line>54</line>
+          <option name="timeStamp" value="39" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/check_ds.py</url>
+          <line>51</line>
+          <option name="timeStamp" value="43" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/sampling_csv.py</url>
+          <line>36</line>
+          <option name="timeStamp" value="44" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/sampling_csv.py</url>
+          <line>34</line>
+          <option name="timeStamp" value="49" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/sample-nes.py</url>
+          <line>66</line>
+          <option name="timeStamp" value="60" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/sample-nes.py</url>
+          <line>54</line>
+          <option name="timeStamp" value="62" />
+        </line-breakpoint>
+      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
@@ -389,245 +502,382 @@
       </default-breakpoints>
     </breakpoint-manager>
   </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/IntroGuidedExtendedSumm$sampling_csv.coverage" NAME="sampling_csv Coverage Results" MODIFIED="1630190826879" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/IntroGuidedExtendedSumm$output_intro_to_text.coverage" NAME="output_intro_to_text Coverage Results" MODIFIED="1631725551076" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/IntroGuidedExtendedSumm$sample_nes.coverage" NAME="sample-nes Coverage Results" MODIFIED="1630517082216" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+  </component>
+  <component name="debuggerHistoryManager">
+    <expressions id="evaluateExpression">
+      <expression>
+        <expression-string>s</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>id, bart_output, bart_rg, bert_pred, bert_rg, rgL_diff = s</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>sorted(parallel_list_unsort,key=itemgetter(5), reverse=True)</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>sorted(parallel_list_unsort,key=itemgetter(5))</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>parallel_list_unsort</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>len(bart_output)</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>bart_output</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>new_instances[-1]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>ent['id']</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
+  </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/utils/rouge.py">
+    <entry file="file://$PROJECT_DIR$/src/bert_to_single_files.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="456">
+          <caret line="46" column="22" selection-start-line="46" selection-start-column="22" selection-end-line="46" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/anal_mmr.sh">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/not-intro-l1.txt">
+    <entry file="file://$PROJECT_DIR$/src/arxivL-anal-paperIDs.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
+        <state relative-caret-position="29265">
+          <caret line="1951" column="8" selection-start-line="1951" selection-start-column="8" selection-end-line="1951" selection-end-column="8" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/convert_bert_data_to_sequential.py">
+    <entry file="file://$PROJECT_DIR$/src/mmr_run.sh">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="21" selection-start-line="6" selection-start-column="21" selection-end-line="6" selection-end-column="21" />
+        <state relative-caret-position="336">
+          <caret line="181" column="37" lean-forward="true" selection-start-line="181" selection-start-column="37" selection-end-line="181" selection-end-column="37" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/models/reporter_ext.py">
+    <entry file="file://$PROJECT_DIR$/src/pick_mmr.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-4671">
-          <caret line="110" column="17" selection-start-line="110" selection-start-column="17" selection-end-line="110" selection-end-column="17" />
+        <state relative-caret-position="157">
+          <caret line="720" column="61" selection-start-line="720" selection-start-column="61" selection-end-line="720" selection-end-column="61" />
         </state>
       </provider>
     </entry>
-    <entry file="file:///Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/pdb.py">
+    <entry file="file://$PROJECT_DIR$/src/arxivL-samples.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-3" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/utils/remove_dup_papers.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="18" lean-forward="true" selection-start-column="18" selection-end-column="18" />
+        <state relative-caret-position="585">
+          <caret line="39" column="9" selection-start-line="39" selection-start-column="9" selection-end-line="39" selection-end-column="9" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/counting.py">
+    <entry file="file://$PROJECT_DIR$/src/pred_target.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="690">
+          <caret line="39" column="2039" selection-start-line="39" selection-start-column="2039" selection-end-line="39" selection-end-column="2039" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pred_bs.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret column="416" selection-start-column="416" selection-end-column="416" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pred_ours.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="809">
+          <caret line="39" column="3403" selection-start-line="39" selection-start-column="3403" selection-end-line="39" selection-end-column="3403" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pick_for_anal.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="444">
+          <caret line="72" column="36" lean-forward="true" selection-start-line="72" selection-start-column="36" selection-end-line="72" selection-end-column="36" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/run_prep.sh">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/utils/oracle_utils.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/dl_dataset.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/etst.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2317" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/spliting_bertfiles.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="248">
-          <caret line="27" lean-forward="true" selection-start-line="27" selection-end-line="27" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/post_stats.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="293">
-          <caret line="56" lean-forward="true" selection-start-line="56" selection-end-line="56" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/sequential_output_combiner.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="18" column="53" selection-start-line="18" selection-start-column="53" selection-end-line="18" selection-end-column="53" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/abstractize.py">
+    <entry file="file://$PROJECT_DIR$/src/post_process_bert.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="510">
-          <caret line="34" column="14" selection-start-line="34" selection-start-column="14" selection-end-line="34" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/train_extractive.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="638">
-          <caret line="255" column="30" selection-start-line="255" selection-start-column="30" selection-end-line="255" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/change_labels_sequential.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-11">
-          <caret line="111" column="38" lean-forward="true" selection-start-line="111" selection-start-column="38" selection-end-line="111" selection-end-column="38" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/tester1.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/sect_to_single_json.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="16" column="21" lean-forward="true" selection-start-line="16" selection-start-column="21" selection-end-line="16" selection-end-column="21" />
+          <caret line="34" column="22" selection-start-line="34" selection-start-column="22" selection-end-line="34" selection-end-column="22" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/calculate_oracle_from_bertfiles.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="338">
-          <caret line="130" column="29" lean-forward="true" selection-start-line="130" selection-start-column="29" selection-end-line="130" selection-end-column="29" />
+        <state relative-caret-position="353">
+          <caret line="80" column="43" selection-start-line="80" selection-start-column="43" selection-end-line="80" selection-end-column="43" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/train.py">
+    <entry file="file://$PROJECT_DIR$/src/sect_to_single_json.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1830">
-          <caret line="128" column="38" selection-start-line="128" selection-start-column="26" selection-end-line="128" selection-end-column="38" />
+        <state relative-caret-position="315">
+          <caret line="25" lean-forward="true" selection-start-line="25" selection-end-line="25" />
         </state>
       </provider>
     </entry>
-    <entry file="file:///Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/torch/__init__.pyi">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1" />
-      </provider>
+    <entry file="file://$PROJECT_DIR$/src/json_to_txt.py">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/models/data_loader.py">
+    <entry file="file://$PROJECT_DIR$/src/ext_train.sh">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="416">
-          <caret line="213" column="8" selection-start-line="213" selection-start-column="8" selection-end-line="213" selection-end-column="8" />
+        <state relative-caret-position="1050">
+          <caret line="70" column="38" selection-start-line="70" selection-start-column="38" selection-end-line="70" selection-end-column="38" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/models/trainer_ext.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="373">
-          <caret line="223" column="48" selection-start-line="223" selection-start-column="48" selection-end-line="223" selection-end-column="48" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/ext_test.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="9" column="65" selection-start-line="9" selection-start-column="65" selection-end-line="9" selection-end-column="65" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/check_intro_labels.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="10" column="80" lean-forward="true" selection-start-line="10" selection-start-column="80" selection-end-line="10" selection-end-column="107" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/preprocess.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="765">
-          <caret line="79" lean-forward="true" selection-start-line="79" selection-end-line="79" />
-        </state>
-      </provider>
+    <entry file="file://$PROJECT_DIR$/src/train.sh">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/bert_to_txt.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="34" lean-forward="true" selection-start-line="27" selection-start-column="10" selection-end-line="34" />
+        <state relative-caret-position="480">
+          <caret line="35" selection-start-line="35" selection-end-line="35" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/post_process_bert.sh">
+    <entry file="file://$PROJECT_DIR$/src/anal_outputs/results_arxivL-test-BertSumExt.p.csv">
+      <provider selected="true" editor-type-id="csv-text-editor">
+        <state relative-caret-position="75">
+          <caret line="5" column="23" lean-forward="true" selection-start-line="5" selection-start-column="23" selection-end-line="5" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/datasets-raw/longsumm/my-format-splits/val/963444.json">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/datasets-raw/ds_stats.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="435">
-          <caret line="29" column="58" selection-start-line="29" selection-start-column="58" selection-end-line="29" selection-end-column="95" />
+        <state relative-caret-position="681">
+          <caret line="98" column="29" selection-start-line="82" selection-start-column="20" selection-end-line="98" selection-end-column="29" />
           <folding>
-            <marker date="1611722785302" expanded="true" signature="576:1106" ph="..." />
+            <element signature="e#0#11#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/datasets-raw/anal_stat.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="326">
+          <caret line="27" column="21" selection-start-line="27" selection-start-column="21" selection-end-line="27" selection-end-column="21" />
+          <folding>
+            <element signature="e#1#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/arxivL-anal-blind.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="277">
+          <caret line="29" column="32" selection-start-line="29" selection-start-column="28" selection-end-line="29" selection-end-column="32" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/utils/spreadsheet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="720">
-          <caret line="49" column="9" selection-start-line="49" selection-start-column="9" selection-end-line="49" selection-end-column="9" />
+        <state relative-caret-position="195">
+          <caret line="14" column="16" selection-start-line="14" selection-start-column="10" selection-end-line="14" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/data_loader.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="421">
+          <caret line="196" column="13" lean-forward="true" selection-start-line="196" selection-start-column="13" selection-end-line="196" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/datasets-raw/arxivL/splits/test/astro-ph0205210.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="205">
+          <caret column="170650" selection-start-column="170609" selection-end-column="170650" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/models/trainer_ext.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="219">
+          <caret line="141" selection-start-line="141" selection-end-line="142" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/train_extractive.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="249">
+          <caret line="236" selection-start-line="236" selection-end-line="236" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/datasets/arxiv.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-5319">
+          <caret line="479" column="20" selection-start-line="479" selection-start-column="20" selection-end-line="479" selection-end-column="20" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/utils/rouge_utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17475">
+        <state relative-caret-position="17910">
           <caret line="1169" selection-start-line="1169" selection-end-line="1169" />
-          <folding>
-            <element signature="e#0#14#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/bert_to_single_files.py">
+    <entry file="file://$PROJECT_DIR$/src/arxivL-anal.json">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="600">
-          <caret line="46" column="22" selection-start-line="46" selection-start-column="22" selection-end-line="46" selection-end-column="22" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/ext_train.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="26" column="49" selection-start-line="26" selection-start-column="49" selection-end-line="26" selection-end-column="49" />
+        <state relative-caret-position="651">
+          <caret line="75" column="3844" selection-start-line="75" selection-start-column="3803" selection-end-line="75" selection-end-column="3844" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/prepro/data_builder.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1232">
-          <caret line="920" column="12" lean-forward="true" selection-start-line="920" selection-start-column="12" selection-end-line="920" selection-end-column="12" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/prep.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="307">
-          <caret line="31" lean-forward="true" selection-start-line="31" selection-end-line="31" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/modify_sent_labels_bertfiles.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="409">
-          <caret line="315" selection-start-line="315" selection-end-line="315" />
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="651">
+          <caret line="1342" column="31" selection-start-line="1342" selection-start-column="31" selection-end-line="1342" selection-end-column="31" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/models/model_builder.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="269">
-          <caret line="374" column="39" lean-forward="true" selection-start-line="374" selection-start-column="39" selection-end-line="374" selection-end-column="39" />
+        <state relative-caret-position="651">
+          <caret line="233" column="127" selection-start-line="233" selection-start-column="127" selection-end-line="233" selection-end-column="127" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/utils/oracle_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="651">
+          <caret line="369" column="22" selection-start-line="369" selection-start-column="22" selection-end-line="369" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/anal_last.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="435">
+          <caret line="13" column="31" selection-start-line="13" selection-start-column="31" selection-end-line="13" selection-end-column="31" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/anal_rg.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret column="185" selection-start-column="183" selection-end-column="185" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/utils/rouge_score.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="105">
+          <caret line="7" column="31" selection-start-line="7" selection-start-column="31" selection-end-line="7" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/prep.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="673">
+          <caret line="63" column="34" selection-start-line="63" selection-start-column="34" selection-end-line="63" selection-end-column="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/datasets-raw/arxivL/splits/test/0704.1202.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="563">
+          <caret column="62859" selection-start-column="62855" selection-end-column="62859" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test-new.json">
+      <provider selected="true" editor-type-id="LargeFileEditor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sample_ids.py" />
+    <entry file="file://$PROJECT_DIR$/src/sampling_100_ids.py" />
+    <entry file="file://$PROJECT_DIR$/src/create_sample_bart_bert.py" />
+    <entry file="file://$PROJECT_DIR$/generated_predictions.txt">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/id_file.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="100" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/preprocess.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="705">
+          <caret line="51" column="25" selection-start-line="51" selection-start-column="25" selection-end-line="51" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/check_ds.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="750">
+          <caret line="51" selection-start-line="51" selection-end-line="51" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/sample_BertBart_anal.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1635">
+          <caret line="111" selection-start-line="111" selection-end-line="111" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test.json">
+      <provider selected="true" editor-type-id="LargeFileEditor" />
+      <provider editor-type-id="text-editor">
+        <state relative-caret-position="1380">
+          <caret column="11951" selection-start-column="11944" selection-end-column="11951" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test_step2231.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="45">
+          <caret column="3186" selection-start-column="3180" selection-end-column="3186" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ext_test.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="23" column="29" selection-start-line="23" selection-start-column="29" selection-end-line="23" selection-end-column="29" />
         </state>
       </provider>
     </entry>

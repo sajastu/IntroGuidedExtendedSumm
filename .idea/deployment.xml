@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="sajad@brunello:20022">
+    <serverData>
+      <paths name="barbaresco">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/packages/summarization/introGuidedSumm" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="barolo-dataset-raw">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/datasets/sci/" local="$PROJECT_DIR$/src/datasets-raw" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="barolo-home">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/packages/sum/intro-guided-extendedSumm" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="brunello-home">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/packages/summarization/introG" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="chianti">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/packages/summarization/introGuidedSumm" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="sajad@brunello:20022">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/sajad/packages/summarization/introGuided" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>

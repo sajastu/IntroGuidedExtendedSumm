@@ -21,6 +21,9 @@ from utils.rouge_score import evaluate_rouge
 from datetime import datetime
 from uuid import uuid4
 import pdb
+
+from utils.rouge_utils import cal_rouge
+
 nyt_remove_words = ["photo", "graph", "chart", "map", "table", "drawing"]
 
 INTRO_KWs_STR = "[introduction, introduction and motivation, motivation, motivations, basics and motivations, introduction., [sec:intro]introduction, *introduction*, i. introduction, [sec:level1]introduction, introduction and motivation, introduction[sec:intro], [intro]introduction, introduction and main results, introduction[intro], introduction and summary, [sec:introduction]introduction, overview, 1. introduction, [sec:intro] introduction, introduction[sec:introduction], introduction and results, introduction and background, [sec1]introduction, [introduction]introduction, introduction and statement of results, introduction[introduction], introduction and overview, introduction:, [intro] introduction, [sec:1]introduction, introduction and main result, introduction[sec1], [sec:level1] introduction, motivations, outline, introductory remarks, [sec1] introduction, introduction and motivations, 1.introduction, introduction and definitions, introduction and notation, introduction and statement of the results, i.introduction, introduction[s1], [sec:level1]introduction +,  introduction., introduction[s:intro], [i]introduction, [sec:int]introduction, introduction and observations, [introduction] introduction, [sec:1] introduction, **introduction**, [seci]introduction,, **introduction**, [seci]introduction, introduction and summary of results, introduction and outline, preliminary remarks, general introduction, [sec:intr]introduction, [s1]introduction, introduction[sec_intro], introduction and statement of main results, scientific motivation, [sec:sec1]introduction, *questions*, introduction and the model, intoduction, challenges, introduction[sec-intro], introduction and result, inroduction, [sec:intro]introduction +, introdution, 1 introduction, brief summary, motivation and introduction, [1]introduction, introduction and related work, [sec:one]introduction, [section1]introduction, [sect:intro]introduction]"
@@ -617,6 +620,79 @@ class BertData():
         return len(src_subtokens)
 
 
+class BertDataOriginal():
+    def __init__(self, args):
+        self.args = args
+
+        if args.model_name == 'scibert':
+            self.tokenizer = BertTokenizer.from_pretrained('allenai/scibert_scivocab_uncased', do_lower_case=True)
+
+        elif 'bert-base' in args.model_name or 'bert-large' in args.model_name:
+            self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
+
+        self.sep_token = '[SEP]'
+        self.cls_token = '[CLS]'
+        self.pad_token = '[PAD]'
+        self.tgt_bos = '[unused0]'
+        self.tgt_eos = '[unused1]'
+        self.tgt_sent_split = '[unused2]'
+        self.sep_vid = self.tokenizer.vocab[self.sep_token]
+        self.cls_vid = self.tokenizer.vocab[self.cls_token]
+        self.pad_vid = self.tokenizer.vocab[self.pad_token]
+
+    def preprocess(self, src, tgt, sent_labels, use_bert_basic_tokenizer=False, is_test=False):
+
+        if ((not is_test) and len(src) == 0):
+            return None
+
+        original_src_txt = [' '.join(s) for s in src]
+
+        idxs = [i for i, s in enumerate(src) if (len(s) > self.args.min_src_ntokens_per_sent)]
+
+        _sent_labels = [0] * len(src)
+        for l in sent_labels:
+            _sent_labels[l] = 1
+
+        src = [src[i][:self.args.max_src_ntokens_per_sent] for i in idxs]
+        sent_labels = [_sent_labels[i] for i in idxs]
+        src = src[:self.args.max_src_nsents]
+        sent_labels = sent_labels[:self.args.max_src_nsents]
+
+        if ((not is_test) and len(src) < self.args.min_src_nsents):
+            return None
+
+        src_txt = [' '.join(sent) for sent in src]
+        text = ' {} {} '.format(self.sep_token, self.cls_token).join(src_txt)
+
+        src_subtokens = self.tokenizer.tokenize(text)
+
+        src_subtokens = [self.cls_token] + src_subtokens + [self.sep_token]
+        src_subtoken_idxs = self.tokenizer.convert_tokens_to_ids(src_subtokens)
+        _segs = [-1] + [i for i, t in enumerate(src_subtoken_idxs) if t == self.sep_vid]
+        segs = [_segs[i] - _segs[i - 1] for i in range(1, len(_segs))]
+        segments_ids = []
+        for i, s in enumerate(segs):
+            if (i % 2 == 0):
+                segments_ids += s * [0]
+            else:
+                segments_ids += s * [1]
+        cls_ids = [i for i, t in enumerate(src_subtoken_idxs) if t == self.cls_vid]
+        sent_labels = sent_labels[:len(cls_ids)]
+
+        tgt_subtokens_str = '[unused0] ' + ' [unused2] '.join(
+            [' '.join(self.tokenizer.tokenize(' '.join(tt), use_bert_basic_tokenizer=use_bert_basic_tokenizer)) for tt in tgt]) + ' [unused1]'
+        tgt_subtoken = tgt_subtokens_str.split()[:self.args.max_tgt_ntokens]
+        if ((not is_test) and len(tgt_subtoken) < self.args.min_tgt_ntokens):
+            return None
+
+        tgt_subtoken_idxs = self.tokenizer.convert_tokens_to_ids(tgt_subtoken)
+
+        tgt_txt = '<q>'.join([' '.join(tt) for tt in tgt])
+        src_txt = [original_src_txt[i] for i in idxs]
+
+        return src_subtoken_idxs, sent_labels, tgt_subtoken_idxs, segments_ids, cls_ids, src_txt, tgt_txt
+
+
 # bert-function
 def format_to_bert(args):
     test_kws = pd.read_csv('csv_files/train_papers_sects_longsum.csv')
@@ -660,7 +736,7 @@ def format_to_bert(args):
         ##########################
 
         # for a in a_lst:
-        #     _format_to_bert(a)
+        #     _format_to_bert_original(a)
 
 
         # single
@@ -678,19 +754,20 @@ def format_to_bert(args):
         all_paper_ids = {}
         intro_labels_count = []
         intro_labels_len_count = []
-        for d in tqdm(pool.imap(_format_to_bert, a_lst), total=len(a_lst), desc=''):
-            all_paper_ids[d[0]] = d[1]
-            all_papers_count += d[2]
-            intro_labels_count.extend(d[3])
-            intro_labels_len_count.extend(d[4])
+        for d in tqdm(pool.imap(_format_to_bert_original, a_lst), total=len(a_lst), desc=''):
+            # all_paper_ids[d[0]] = d[1]
+            # all_papers_count += d[2]
+            # intro_labels_count.extend(d[3])
+            # intro_labels_len_count.extend(d[4])
+            pass
 
-        pool.close()
-        pool.join()
-        import statistics
-        print('Num of papers: {}'.format(all_papers_count))
-        print('Median of intro labels: {}'.format(statistics.median(intro_labels_count)))
-        print('Mean of intro labels: {}'.format(statistics.mean(intro_labels_count)))
-        print('Min of intro labels: {}'.format(min(intro_labels_len_count)))
+        # pool.close()
+        # pool.join()
+        # import statistics
+        # print('Num of papers: {}'.format(all_papers_count))
+        # print('Median of intro labels: {}'.format(statistics.median(intro_labels_count)))
+        # print('Mean of intro labels: {}'.format(statistics.mean(intro_labels_count)))
+        # print('Min of intro labels: {}'.format(min(intro_labels_len_count)))
 
 def _format_to_bert(params):
     corpus_type, json_file, args, save_file, kws, bart, sent_numbers_whole, debug_idx = params
@@ -1066,6 +1143,64 @@ def _format_to_bert(params):
     gc.collect()
     return save_file, papers_ids, len(papers_ids), intro_labels_count, intro_labels_len_count
 
+
+def _format_to_bert_original(params):
+    # corpus_type, json_file, args, save_file = params
+    corpus_type, json_file, args, save_file, kws, bart, sent_numbers_whole, debug_idx = params
+
+    is_test = corpus_type == 'test'
+    if (os.path.exists(save_file)):
+        logger.info('Ignore %s' % save_file)
+        return
+
+    bert = BertDataOriginal(args)
+
+    logger.info('Processing %s' % json_file)
+    jobs = json.load(open(json_file))
+    datasets = []
+    for d in jobs:
+        source, tgt = d['src'], d['tgt']
+        source = [s[0] for s in source[:args.max_src_nsents]]
+        sent_labels = greedy_selection([s[0] for s in source[:args.max_src_nsents]], tgt, 3)
+        if (args.lower):
+
+            source = [' '.join(s).lower().split() for s in source]
+            tgt = [' '.join(s).lower().split() for s in tgt]
+            # tgt = [' '.join(s).lower() for s in tgt[0]]
+
+        b_data = bert.preprocess(source, tgt, sent_labels, use_bert_basic_tokenizer=args.use_bert_basic_tokenizer,
+                                 is_test=is_test)
+        # b_data = bert.preprocess(source, tgt, sent_labels, use_bert_basic_tokenizer=args.use_bert_basic_tokenizer)
+
+        if (b_data is None):
+            print('rrrrrr')
+            continue
+        src_subtoken_idxs, sent_labels, tgt_subtoken_idxs, segments_ids, cls_ids, src_txt, tgt_txt = b_data
+        # b_data_dict = {"src": src_subtoken_idxs, "tgt": tgt_subtoken_idxs,
+        #                "src_sent_labels": sent_labels, "segs": segments_ids, 'clss': cls_ids,
+        #                'src_txt': src_txt, "tgt_txt": tgt_txt}
+
+        b_data_dict = {"src": src_subtoken_idxs, "tgt": tgt_subtoken_idxs,
+                       "src_sent_rg": [0 for _ in sent_labels],
+                       "src_sent_labels": sent_labels.copy(),
+                       "segs": segments_ids, 'clss': cls_ids,
+                       'src_txt': src_txt, "tgt_txt": tgt_txt,
+                       "paper_id": d['id'],
+                       "sent_sect_labels": [0 for _ in sent_labels], "segment_rg_score": [0 for _ in sent_labels],
+                       "sent_sections_txt": [0 for _ in sent_labels], "sent_sect_wise_rg": [0 for _ in sent_labels],
+                       "sent_numbers": [0 for _ in sent_labels],
+                       "sent_token_count": [0 for _ in sent_labels],
+                       "intro_txt": '', "src_intro": src_subtoken_idxs,
+                       "intro_labels": [0 for _ in sent_labels], "intro_cls_ids": cls_ids}
+
+        datasets.append(b_data_dict)
+    logger.info('Processed instances %d' % len(datasets))
+    logger.info('Saving to %s' % save_file)
+    torch.save(datasets, save_file)
+    datasets = []
+    gc.collect()
+
+
 # line function
 def format_to_lines(args):
     if args.dataset != '':
@@ -1171,6 +1306,162 @@ def format_to_lines(args):
     #     for s, c in sections.items():
     #         F.write(s + ' --> '+ str(c))
     #         F.write('\n')
+
+
+
+# line function
+def format_to_lines_bart(args):
+    if args.dataset != '':
+        corpuses_type = [args.dataset]
+    else:
+        print("You should consider the dataset...")
+        os._exit(0)
+    #     corpuses_type = ['train', 'val', 'test']
+
+
+    papers_sent_numbers = pickle.load(open(args.sent_numbers_path, mode='rb'))
+    sections = {}
+
+    for corpus_type in corpuses_type:
+        files = []
+        for f in glob.glob(args.raw_path +'/*.json'):
+            files.append(f)
+
+
+            # import pdb;pdb.set_trace()
+        corpora = {corpus_type: files}
+        for corpus_type in corpora.keys():
+            a_lst = []
+            for f in corpora[corpus_type]:
+                try:
+                    if 'pubmedL' in f:
+                        a_lst.append(
+                            (f, args.keep_sect_num, papers_sent_numbers[f.split('/')[-1].replace('.json', '.nxml')]))
+                    else:
+                        a_lst.append((f, args.keep_sect_num, papers_sent_numbers[f.split('/')[-1].replace('.json','')]))
+                except:
+                    print('non_')
+                    continue
+
+            print('Checked papers: {}'.format(len(a_lst)))
+            dataset = []
+            check_path_existence(args.save_path)
+
+            ##########################
+            ###### <DEBUGGING> #######
+            ##########################
+
+            for a in tqdm(a_lst, total=len(a_lst)):
+
+                d = _format_to_lines_bart(a)
+                if d is not None:
+                    # dataset.extend(d[0])
+                    dataset.append(d)
+            if (len(dataset) > 0):
+
+               # with open(args.save_path + "/{}.source".format(args.dataset), mode='w') as fSrc, \
+               #         open(args.save_path + "/{}.target".format(args.dataset), mode='w') as fTgt:
+               #          for d in dataset:
+               #              fSrc.write(d['src'].strip())
+               #              fSrc.write('\n')
+               #              fTgt.write(d['tgt'].strip())
+               #              fTgt.write('\n')
+
+                fOut = open(args.save_path + "/{}.jsonl".format(args.dataset), mode='w')
+                for d in dataset:
+                    ent = {'text': d['src'], 'abstract': d['tgt']}
+                    json.dump(ent, fOut)
+                    fOut.write('\n')
+
+
+
+            print('Processed {} papers for {} set'.format(len(dataset), corpus_type))
+            ###########################
+            ###### </DEBUGGING> #######
+            ###########################
+
+
+            # for d in tqdm(pool.imap_unordered(_format_longsum_to_lines_section_based, a_lst), total=len(a_lst)):
+            # for d in tqdm(pool.imap_unordered(_format_to_lines, a_lst), total=len(a_lst)):
+            #     # d_1 = d[1]
+            #     if d is not None:
+            #         all_papers_count+=1
+            #         curr_paper_count+=1
+            #
+            #         # dataset.extend(d[0])
+            #         dataset.append(d)
+            #         # import pdb;pdb.set_trace()
+            #         # if (len(dataset) > args.shard_size):
+            #         if (curr_paper_count > args.shard_size):
+            #             pt_file = "{:s}{:s}.{:d}.json".format(args.save_path + '', corpus_type, p_ct)
+            #             print(pt_file)
+            #             with open(pt_file, 'w') as save:
+            #                 # save.write('\n'.join(dataset))
+            #                 save.write(json.dumps(dataset))
+            #                 print('data len: {}'.format(len(dataset)))
+            #                 p_ct += 1
+            #                 dataset = []
+            #             curr_paper_count = 0
+            #
+            #
+            # pool.close()
+            # pool.join()
+            #
+            # if (len(dataset) > 0):
+            #     pt_file = "{:s}{:s}.{:d}.json".format(args.save_path + '', corpus_type, p_ct)
+            #     print(pt_file)
+            #     # all_papers_count += len(dataset)
+            #     with open(pt_file, 'w') as save:
+            #         # save.write('\n'.join(dataset))
+            #         save.write(json.dumps(dataset))
+            #         p_ct += 1
+            #
+            #         dataset = []
+            # print('Processed {} papers for {} set'.format(all_papers_count, corpus_type))
+
+
+    # sections = sorted(sections.items(), key=lambda x: x[1], reverse=True)
+    # sections = dict(sections)
+    # with open('sect_stat.txt', mode='a') as F:
+    #     for s, c in sections.items():
+    #         F.write(s + ' --> '+ str(c))
+    #         F.write('\n')
+
+
+def _format_to_lines_bart(params):
+    src_path, keep_sect_num, sent_numbers = params
+
+    def load_json(src_json):
+        # print(src_json)
+        paper = json.load(open(src_json))
+
+        # if len(paper['sentences']) < 10 or sum([len(sent) for sent in paper['gold']]) < 10:
+        #     return -1, 0, 0
+        try:
+            id = paper['filename']
+        except:
+            id = paper['id']
+
+        # for sent in paper['sentences']:
+        #     tokens = sent[0]
+        # if (lower):
+        #     tokens = [t.lower() for t in tokens]
+        #     sent[0] = tokens
+
+        # for i, sent in enumerate(paper['gold']):
+        #     tokens = sent
+        # if (lower):
+        #     tokens = [t.lower() for t in tokens]
+        #     paper['gold'][i] = tokens
+
+        return ' '.join([' '.join(p[0]) for s_num, p in enumerate(paper['sentences'])
+                if s_num in sent_numbers]), ' '.join([' '.join(g) for g in paper['gold']]), id
+
+    paper_sents, paper_tgt, id = load_json(src_path)
+    if paper_sents == -1:
+        return None
+
+    return {'id': id, 'src': paper_sents, 'tgt': paper_tgt}
 
 
 def _format_to_lines(params):

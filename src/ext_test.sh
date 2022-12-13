@@ -6,40 +6,39 @@
 ######### Data #########
 #########################
 
-#BERT_DIR=/disk1/sajad/datasets/sci/arxivL//bert-files/2048-segmented-intro1536-15-introConc-updated/
-BERT_DIR=/disk1/sajad/datasets/sci/arxivL/bert-files/2048-segmented-intro1536-15-introConc-updated/
-
+BERT_DIR=/disk1/sajad/datasets/sci/arxivL//bert-files/2048-segmented-intro1536-15-introConc/
+#BERT_DIR=/disk1/sajad/datasets/sci/pubmedL/bert-files/2048-segmented-intro2048-20-introConc/
 
 #########################
 ######### MODELS#########
 #########################
 
-#MODEL_PATH=/disk1/sajad/sci-trained-models/presum/arxivL-2500-segmented-introG1536/
-MODEL_PATH=/disk1/sajad/sci-trained-models/presum/pubmedL-2048-segmented-introG2048Baseline-IntroConc/
-#/disk1/sajad/sci-trained-models/presum/pubmedL-2048-segmented-introG2048Baseline-IntroConc/
+#number of intro_samples should differ for each dataset!!!!!
 
-CHECKPOINT=$MODEL_PATH/model_step_50000.pt
+MODEL_PATH=/disk1/sajad/sci-trained-models/presum/ARXIVL-2048-introG1536-IntroConc/ #final model
+#MODEL_PATH=/disk1/sajad/sci-trained-models/presum/pubmedL-2048-segmented-introG2048Baseline-IntroConc/ #final model
 
+CHECKPOINT=$MODEL_PATH/BEST_model_s70000_0.4937_0.2046_0.2231.pt #arxivL-ch
+#CHECKPOINT=$MODEL_PATH/BEST_model_s190000_0.4952_0.2155_0.2392.pt #pubmedL-ch
 
-
-
-
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 
 MAX_POS=2048
-MAX_POS_INTRO=2048
+MAX_POS_INTRO=1536
 
 RG_CELL=H90:J90
 
-mkdir -p ../results/$(echo $MODEL_PATH | cut -d \/ -f 6)
-for ST in test
+mkdir -p $MODEL_PATH/results/
+
+for ST in val test train
 do
-    RESULT_PATH=../results/$(echo $MODEL_PATH | cut -d \/ -f 6)/$ST
 #    RESULT_PATH=../results/$(echo $MODEL_PATH | cut -d \/ -f 6)/abs-set/$ST.official
 #    RESULT_PATH=/home/sajad/datasets/longsum/submission_files/
+    mkdir -p $MODEL_PATH/results/$ST
+    RESULT_PATH=$MODEL_PATH/results/$ST
     python3 train.py -task ext \
                     -mode test \
-                    -test_batch_size 10000 \
+                    -test_batch_size 32000 \
                     -bert_data_path $BERT_DIR \
                     -log_file ../logs/val_ext \
                     -model_path $MODEL_PATH \
@@ -51,7 +50,6 @@ do
                     -max_length 600 \
                     -alpha 0.95 \
                     -exp_set $ST \
-                    -pick_top \
                     -min_length 600 \
                     -finetune_bert False \
                     -result_path $RESULT_PATH \
@@ -59,10 +57,10 @@ do
                     -model_name longformer \
                     -val_pred_len 20 \
                     -gd_cells_rg $RG_CELL \
-                    -gd_cell_step R72 \
-                    -saved_list_name save_lists/lsum-$ST-longformer-multi50-aftersdu.p \
+                    -gd_cell_step R90 \
+                    -saved_list_name /disk1/sajad/save_lists/pubmedL-$ST-BertSumIntroGuided.p \
                     -section_prediction \
-                    -alpha_mtl 0.50
+                    -pick_top
 
 done
 

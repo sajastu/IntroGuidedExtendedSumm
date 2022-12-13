@@ -271,10 +271,10 @@ class Trainer(object):
         preds_sent_numbers = {}
         recalls = []
         # for idx, p in tqdm(enumerate(paper_sent_scores), total=len(paper_sent_scores)):
-        #     if idx>2485:
-        #         a, b, c = _mult_top_sents(p, idx)
-        #         preds_sent_numbers[a] = b
-        #         recalls.append(c)
+        #     # if idx>2485:
+        #     a, b, c = _mult_top_sents(p, idx)
+        #     preds_sent_numbers[a] = b
+        #     recalls.append(c)
 
         pool = Pool(24)
         for d in tqdm(pool.imap_unordered(_mult_top_sents, paper_sent_scores), total=len(paper_sent_scores)):
@@ -289,6 +289,9 @@ class Trainer(object):
         return overall_recall, preds_sent_numbers
         # pickle.dump(preds_sent_numbers, open(self.args.saved_list_name.replace('save_lists', 'second_phase'), "wb"))
 
+
+
+
     def validate_rouge_baseline(self, valid_iter_fct, step=0, valid_gl_stats=None, write_scores_to_pickle=False):
         """ Validate model.
             valid_iter: validate data iterator
@@ -301,6 +304,7 @@ class Trainer(object):
         golds = {}
         can_path = '%s_step%d.source' % (self.args.result_path, step)
         gold_path = '%s_step%d.target' % (self.args.result_path, step)
+        json_pred = '%s_step%d.json' % (self.args.result_path, step)
 
         if step == self.best_val_step:
             can_path = '%s_step%d.source' % (self.args.result_path_test, step)
@@ -308,6 +312,8 @@ class Trainer(object):
 
         save_pred = open(can_path, 'w')
         save_gold = open(gold_path, 'w')
+        save_json = open(json_pred, 'w')
+
         sent_scores_whole = {}
         sent_sects_whole_pred = {}
         sent_sects_whole_true = {}
@@ -326,173 +332,296 @@ class Trainer(object):
 
         valid_iter = valid_iter_fct()
 
-        with torch.no_grad():
-            for batch in tqdm(valid_iter):
-                src = batch.src
-                src_intro = batch.src_intro
-                labels = batch.src_sent_rg
-                sent_bin_labels = batch.sent_labels
-                intro_sent_labels = batch.intro_sent_labels
+        if not self.args.pick_top:
+            with torch.no_grad():
+                for batch in tqdm(valid_iter):
+                    src = batch.src
+                    src_intro = batch.src_intro
+                    labels = batch.src_sent_rg
+                    sent_bin_labels = batch.sent_labels
+                    intro_sent_labels = batch.intro_sent_labels
 
-                segs = batch.segs
+                    segs = batch.segs
 
-                clss = batch.clss
-                intro_clss = batch.intro_clss
+                    clss = batch.clss
+                    intro_clss = batch.intro_clss
 
-                # section_rg = batch.section_rg
-                mask = batch.mask_src
-                mask_cls = batch.mask_cls
-                mask_intro_cls = batch.mask_intro_cls
+                    # section_rg = batch.section_rg
+                    mask = batch.mask_src
+                    mask_cls = batch.mask_cls
+                    mask_intro_cls = batch.mask_intro_cls
 
-                mask_src_intro = batch.mask_src_intro
-                p_id = batch.paper_id
-                segment_src = batch.src_str
-                paper_tgt = batch.tgt_str
-                sent_sect_wise_rg = batch.sent_sect_wise_rg
-                sent_sections_txt = batch.sent_sections_txt
-                sent_numbers = batch.sent_numbers
-                sent_tokens_count = batch.sent_token_count
+                    mask_src_intro = batch.mask_src_intro
+                    p_id = batch.paper_id
+                    segment_src = batch.src_str
+                    paper_tgt = batch.tgt_str
+                    sent_sect_wise_rg = batch.sent_sect_wise_rg
+                    sent_sections_txt = batch.sent_sections_txt
+                    sent_numbers = batch.sent_numbers
+                    sent_tokens_count = batch.sent_token_count
 
-                sent_sect_labels = batch.sent_sect_labels
-                if self.intro_cls:
-                    sent_scores, mask_cls, loss, intro_loss, loss_src = self.model(src, src_intro, segs, clss, intro_clss,
-                                                             mask, mask_src_intro, mask_cls, mask_intro_cls,
-                                                             sent_bin_labels, intro_sent_labels,
-                                                             sent_sect_labels, p_id)
+                    sent_sect_labels = batch.sent_sect_labels
+                    if self.intro_cls:
+                        sent_scores, mask_cls, loss, intro_loss, loss_src = self.model(src, src_intro, segs, clss, intro_clss,
+                                                                 mask, mask_src_intro, mask_cls, mask_intro_cls,
+                                                                 sent_bin_labels, intro_sent_labels,
+                                                                 sent_sect_labels, p_id)
 
-                    # acc, _ = self._get_mertrics(sent_sect_scores, sent_sect_labels, mask=mask,
-                    #                             task='sent_sect')
+                        # acc, _ = self._get_mertrics(sent_sect_scores, sent_sect_labels, mask=mask,
+                        #                             task='sent_sect')
 
-                    batch_stats = Statistics(loss=float(loss.cpu().data.numpy().sum()),
-                                             loss_sect=float(loss_src.cpu().data.numpy().sum()),
-                                             loss_sent=float(intro_loss.cpu().data.numpy().sum()),
-                                             n_docs=len(labels),
-                                             # n_acc=batch.batch_size,
-                                             RMSE=self._get_mertrics(sent_scores, labels, mask=mask_cls, task='sent'),
-                                             # accuracy=acc
-                                             )
-
-
-                stats.update(batch_stats)
-
-                # sent_scores = sent_scores + mask_cls.float()
-                sent_scores = sent_scores.cpu().data.numpy()
-
-                for idx, p_id in enumerate(p_id):
-                    p_id = p_id.split('___')[0]
-
-                    if p_id not in sent_scores_whole.keys():
-                        masked_scores = sent_scores[idx] * mask_cls[idx].cpu().data.numpy()
-                        masked_scores = masked_scores[np.nonzero(masked_scores)]
-
-                        masked_sent_labels_true = (sent_bin_labels[idx] + 1) * mask_cls[idx].long()
-
-                        masked_sent_labels_true = masked_sent_labels_true[np.nonzero(masked_sent_labels_true)].flatten()
-                        masked_sent_labels_true = (masked_sent_labels_true - 1)
-
-                        sent_scores_whole[p_id] = masked_scores
-                        sent_labels_true[p_id] = masked_sent_labels_true.cpu()
-
-                        masked_sents_sections_true = (sent_sect_labels[idx] + 1) * mask_cls[idx].long()
-
-                        masked_sents_sections_true = masked_sents_sections_true[
-                            np.nonzero(masked_sents_sections_true)].flatten()
-                        masked_sents_sections_true = (masked_sents_sections_true - 1)
-                        sent_sects_whole_true[p_id] = masked_sents_sections_true.cpu()
+                        batch_stats = Statistics(loss=float(loss.cpu().data.numpy().sum()),
+                                                 loss_sect=float(loss_src.cpu().data.numpy().sum()),
+                                                 loss_sent=float(intro_loss.cpu().data.numpy().sum()),
+                                                 n_docs=len(labels),
+                                                 # n_acc=batch.batch_size,
+                                                 RMSE=self._get_mertrics(sent_scores, labels, mask=mask_cls, task='sent'),
+                                                 # accuracy=acc
+                                                 )
 
 
-                        paper_srcs[p_id] = segment_src[idx]
-                        if sent_numbers[0] is not None:
-                            sent_numbers_whole[p_id] = sent_numbers[idx]
-                        paper_tgts[p_id] = paper_tgt[idx]
-                        sent_sect_wise_rg_whole[p_id] = sent_sect_wise_rg[idx]
-                        sent_sections_txt_whole[p_id] = sent_sections_txt[idx]
+                    stats.update(batch_stats)
+
+                    # sent_scores = sent_scores + mask_cls.float()
+                    sent_scores = sent_scores.cpu().data.numpy()
+
+                    for idx, p_id in enumerate(p_id):
+                        p_id = p_id.split('___')[0]
+
+                        if p_id not in sent_scores_whole.keys():
+                            masked_scores = sent_scores[idx] * mask_cls[idx].cpu().data.numpy()
+                            masked_scores = masked_scores[np.nonzero(masked_scores)]
+
+                            masked_sent_labels_true = (sent_bin_labels[idx] + 1) * mask_cls[idx].long()
+
+                            masked_sent_labels_true = masked_sent_labels_true[np.nonzero(masked_sent_labels_true)].flatten()
+                            masked_sent_labels_true = (masked_sent_labels_true - 1)
+
+                            sent_scores_whole[p_id] = masked_scores
+                            sent_labels_true[p_id] = masked_sent_labels_true.cpu()
+
+                            masked_sents_sections_true = (sent_sect_labels[idx] + 1) * mask_cls[idx].long()
+
+                            masked_sents_sections_true = masked_sents_sections_true[
+                                np.nonzero(masked_sents_sections_true)].flatten()
+                            masked_sents_sections_true = (masked_sents_sections_true - 1)
+                            sent_sects_whole_true[p_id] = masked_sents_sections_true.cpu()
 
 
-                    else:
-                        masked_scores = sent_scores[idx] * mask_cls[idx].cpu().data.numpy()
-                        masked_scores = masked_scores[np.nonzero(masked_scores)]
+                            paper_srcs[p_id] = segment_src[idx]
+                            if sent_numbers[0] is not None:
+                                sent_numbers_whole[p_id] = sent_numbers[idx]
+                            paper_tgts[p_id] = paper_tgt[idx]
+                            sent_sect_wise_rg_whole[p_id] = sent_sect_wise_rg[idx]
+                            sent_sections_txt_whole[p_id] = sent_sections_txt[idx]
 
-                        masked_sent_labels_true = (sent_bin_labels[idx] + 1) * mask_cls[idx].long()
-                        masked_sent_labels_true = masked_sent_labels_true[np.nonzero(masked_sent_labels_true)].flatten()
-                        masked_sent_labels_true = (masked_sent_labels_true - 1)
 
-                        sent_scores_whole[p_id] = np.concatenate((sent_scores_whole[p_id], masked_scores), 0)
-                        sent_labels_true[p_id] = np.concatenate((sent_labels_true[p_id], masked_sent_labels_true.cpu()),
-                                                                0)
+                        else:
+                            masked_scores = sent_scores[idx] * mask_cls[idx].cpu().data.numpy()
+                            masked_scores = masked_scores[np.nonzero(masked_scores)]
 
-                        masked_sents_sections_true = (sent_sect_labels[idx] + 1) * mask_cls[idx].long()
-                        masked_sents_sections_true = masked_sents_sections_true[
-                            np.nonzero(masked_sents_sections_true)].flatten()
-                        masked_sents_sections_true = (masked_sents_sections_true - 1)
-                        sent_sects_whole_true[p_id] = np.concatenate(
-                            (sent_sects_whole_true[p_id], masked_sents_sections_true.cpu()), 0)
+                            masked_sent_labels_true = (sent_bin_labels[idx] + 1) * mask_cls[idx].long()
+                            masked_sent_labels_true = masked_sent_labels_true[np.nonzero(masked_sent_labels_true)].flatten()
+                            masked_sent_labels_true = (masked_sent_labels_true - 1)
 
-                        paper_srcs[p_id] = np.concatenate((paper_srcs[p_id], segment_src[idx]), 0)
-                        if sent_numbers[0] is not None:
-                            sent_numbers_whole[p_id] = np.concatenate((sent_numbers_whole[p_id], sent_numbers[idx]), 0)
-                            # sent_tokens_count_whole[p_id] = np.concatenate(
-                            #     (sent_tokens_count_whole[p_id], sent_tokens_count[idx]), 0)
+                            sent_scores_whole[p_id] = np.concatenate((sent_scores_whole[p_id], masked_scores), 0)
+                            sent_labels_true[p_id] = np.concatenate((sent_labels_true[p_id], masked_sent_labels_true.cpu()),
+                                                                    0)
 
-                        sent_sect_wise_rg_whole[p_id] = np.concatenate(
-                            (sent_sect_wise_rg_whole[p_id], sent_sect_wise_rg[idx]), 0)
-                        sent_sections_txt_whole[p_id] = np.concatenate(
-                            (sent_sections_txt_whole[p_id], sent_sections_txt[idx]), 0)
+                            masked_sents_sections_true = (sent_sect_labels[idx] + 1) * mask_cls[idx].long()
+                            masked_sents_sections_true = masked_sents_sections_true[
+                                np.nonzero(masked_sents_sections_true)].flatten()
+                            masked_sents_sections_true = (masked_sents_sections_true - 1)
+                            sent_sects_whole_true[p_id] = np.concatenate(
+                                (sent_sects_whole_true[p_id], masked_sents_sections_true.cpu()), 0)
 
-        # if self.args.pick_top:
-        #     preds_sent_numbers = {}
-        #
-        #     saved_dict = {}
-        #     paper_sent_scores = []
-        #     logger.info("Picking top sentences for second phase...")
-        #     for p_idx, (p_id, sent_scores) in enumerate(sent_scores_whole.items()):
-        #         paper_sent_true_labels = np.array(sent_labels_true[p_id])
-        #         sent_scores = np.array(sent_scores)
-        #         p_src = np.array(paper_srcs[p_id])
-        #
-        #         if sent_numbers is not None:
-        #             p_sent_numbers = np.array(sent_numbers_whole[p_id])
-        #         else:
-        #             p_sent_numbers = None
-        #         p_sent_sent_sects_true = np.array(sent_sects_whole_true[p_id])
-        #
-        #         saved_dict[p_id] = (sent_scores, p_id, p_src, p_sent_numbers, p_sent_sent_sects_true)
-        #
-        #         keep_ids = [idx for idx, s in enumerate(p_src) if
-        #                     len(s.replace('.', '').replace(',', '').replace('(', '').replace(')', '').
-        #                         replace('-', '').replace(':', '').replace(';', '').replace('*', '').split()) > 5 and
-        #                     len(s.replace('.', '').replace(',', '').replace('(', '').replace(')', '').
-        #                         replace('-', '').replace(':', '').replace(';', '').replace('*', '').split()) < 120
-        #                     ]
-        #
-        #         keep_ids = sorted(keep_ids)
-        #
-        #         # top_sent_indexes = top_sent_indexes[top_sent_indexes]
-        #         p_src = p_src[keep_ids]
-        #         p_sent_numbers = p_sent_numbers[keep_ids]
-        #         # p_sent_tokens_count = p_sent_tokens_count[keep_ids]
-        #         sent_scores = sent_scores[keep_ids]
-        #         p_sent_sent_sects_true = p_sent_sent_sects_true[keep_ids]
-        #         paper_sent_true_labels = paper_sent_true_labels[keep_ids]
-        #         # sent_true_labels = sent_true_labels[keep_ids]
-        #
-        #         # sent_scores = np.asarray([s - 1.00 for s in sent_scores])
-        #
-        #         paper_sent_scores.append((sent_scores, p_id, p_src, p_sent_numbers, p_sent_sent_sects_true,
-        #                                   paper_sent_true_labels, self.bert, "section-stat"))
+                            paper_srcs[p_id] = np.concatenate((paper_srcs[p_id], segment_src[idx]), 0)
+                            if sent_numbers[0] is not None:
+                                sent_numbers_whole[p_id] = np.concatenate((sent_numbers_whole[p_id], sent_numbers[idx]), 0)
+                                # sent_tokens_count_whole[p_id] = np.concatenate(
+                                #     (sent_tokens_count_whole[p_id], sent_tokens_count[idx]), 0)
 
-            # pickle.dump(paper_sent_scores,
-            #             open(self.args.saved_list_name.replace('.p', '-sent-scores.p'), "wb"))
+                            sent_sect_wise_rg_whole[p_id] = np.concatenate(
+                                (sent_sect_wise_rg_whole[p_id], sent_sect_wise_rg[idx]), 0)
+                            sent_sections_txt_whole[p_id] = np.concatenate(
+                                (sent_sections_txt_whole[p_id], sent_sections_txt[idx]), 0)
+
+
+            saved_dict = {}
+            # source_sent_encodings = {}
+            # sent_sect_wise_rg_whole = {}
+            for p_id, sent_scores in tqdm(sent_scores_whole.items(), total=len(sent_scores_whole)):
+                # source_sent_encodings[p_id] = [0]
+                saved_dict[p_id] = (
+                    p_id, sent_scores_whole[p_id], paper_srcs[p_id], paper_tgts[p_id], sent_sects_whole_true[p_id],
+                    sent_sects_whole_true[p_id], sent_sections_txt_whole[p_id],
+                    sent_labels_true[p_id], sent_sect_wise_rg_whole[p_id], sent_numbers_whole[p_id])
+            print('Now saving picke file...')
+            pickle.dump(saved_dict, open(self.args.saved_list_name, "wb"))
+
+            # else  :
+            PRED_LEN = self.args.val_pred_len
+            # LENGTH_LIMIT= 100
+            acum_f_sent_labels = 0
+            acum_p_sent_labels = 0
+            acum_r_sent_labels = 0
+            acc_total = 0
+            f_scores = {}
+
+            for p_idx, (p_id, sent_scores) in enumerate(sent_scores_whole.items()):
+                # sent_true_labels = pickle.load(open("sent_labels_files/pubmedL/val.labels.p", "rb"))
+                # section_textual = np.array(section_textual)
+                paper_sent_true_labels = np.array(sent_labels_true[p_id])
+
+                sent_scores = np.array(sent_scores)
+                p_src = np.array(paper_srcs[p_id])
+
+                # selected_ids_unsorted = np.argsort(-sent_scores, 0)
+                keep_ids = [idx for idx, s in enumerate(p_src) if
+                            len(s.replace('.', '').replace(',', '').replace('(', '').replace(')', '').
+                                replace('-', '').replace(':', '').replace(';', '').replace('*', '').split()) > 5 and
+                            len(s.replace('.', '').replace(',', '').replace('(', '').replace(')', '').
+                                replace('-', '').replace(':', '').replace(';', '').replace('*', '').split()) < 100
+                            ]
+
+                keep_ids = sorted(keep_ids)
+
+                # top_sent_indexes = top_sent_indexes[top_sent_indexes]
+                p_src = p_src[keep_ids]
+                sent_scores = sent_scores[keep_ids]
+                paper_sent_true_labels = paper_sent_true_labels[keep_ids]
+
+                sent_scores = np.asarray([s - 1.00 for s in sent_scores])
+
+                selected_ids_unsorted = np.argsort(-sent_scores, 0)
+
+                _pred = []
+                for j in selected_ids_unsorted:
+                    if (j >= len(p_src)):
+                        continue
+                    candidate = p_src[j].strip()
+                    if True:
+                        # if (not _block_tri(candidate, _pred)):
+                        _pred.append((candidate, j))
+
+                    if (len(_pred) == PRED_LEN):
+                        break
+                _pred = sorted(_pred, key=lambda x: x[1])
+                _pred_final_str = '<q>'.join([x[0] for x in _pred])
+
+                preds[p_id] = _pred_final_str
+                golds[p_id] = paper_tgts[p_id]
+                preds_with_idx[p_id] = _pred
+                if p_idx > 10:
+                    f, p, r = _get_precision_(paper_sent_true_labels, [p[1] for p in _pred])
+                    f_scores[p_id] = f
+
+                else:
+                    f, p, r = _get_precision_(paper_sent_true_labels, [p[1] for p in _pred], print_few=True, p_id=p_id)
+                    f_scores[p_id] = f
+
+                acum_f_sent_labels += f
+                acum_p_sent_labels += p
+                acum_r_sent_labels += r
+
+            # for id, pred in preds.items():
+            #     save_pred.write(pred.strip().replace('<q>', ' ') + '\n')
+            #     save_gold.write(golds[id].replace('<q>', ' ').strip() + '\n')
+
+            # print(f'Gold: {gold_path}')
+            # print(f'Prediction: {can_path}')
+
+            r1, r2, rl = self._report_rouge(preds.values(), golds.values())
+
+            with open(json_pred, mode='w') as jF:
+                for id, pred in preds.items():
+                    dic = {'paper_id': id, 'pred': pred.strip().replace('<q>', ' '),
+                           'gold': golds[id].strip().replace('<q>', ' '), 'f1': f_scores[id]}
+
+                    json.dump(dic, jF)
+                    jF.write('\n')
+
+            stats.set_rl(r1, r2, rl)
+            logger.info("F-score: %4.4f, Prec: %4.4f, Recall: %4.4f" % (
+                acum_f_sent_labels / len(sent_scores_whole), acum_p_sent_labels / len(sent_scores_whole),
+                acum_r_sent_labels / len(sent_scores_whole)))
+
+            stats.set_ir_metrics(acum_f_sent_labels / len(sent_scores_whole),
+                                 acum_p_sent_labels / len(sent_scores_whole),
+                                 acum_r_sent_labels / len(sent_scores_whole))
+            self.valid_rgls.append((r2 + rl) / 2)
+            self._report_step(0, step,
+                              # self.model.uncertainty_loss._sigmas_sq[0] if self.intro_cls else 0,
+                              # self.model.uncertainty_loss._sigmas_sq[1] if self.intro_cls else 0,
+                              valid_stats=stats)
+
+            if len(self.valid_rgls) > 0:
+                if self.min_rl < self.valid_rgls[-1]:
+                    self.min_rl = self.valid_rgls[-1]
+                    best_model_saved = True
+
+
+        else:
+            preds_sent_numbers = {}
+
+            saved_dict = {}
+            paper_sent_scores = []
+            logger.info("Picking top sentences for second phase...")
+
+            saved_dict_ = pickle.load(open(self.args.saved_list_name,'rb'))
+
+            for p_idx, (p_id, (p_id, sent_scores, paper_src, paper_tgt, sent_sects_true,
+                               sent_sects_whole_true, sent_sections_txt_whole, sent_labels_true,
+                               sent_sect_wise_rg, sent_numbers)) in enumerate(saved_dict_.items()):
+
+
+                paper_sent_true_labels = np.array(sent_labels_true)
+                sent_scores = np.array(sent_scores)
+                p_src = np.array(paper_src)
+                # import pdb;
+                # pdb.set_trace()
+                p_sent_numbers = np.array(sent_numbers)
+
+                p_sent_sent_sects_true = np.array(sent_sects_true)
+
+                saved_dict[p_id] = (sent_scores, p_id, p_src, p_sent_numbers, p_sent_sent_sects_true)
+
+                keep_ids = [idx for idx, s in enumerate(p_src) if
+                            len(s.replace('.', '').replace(',', '').replace('(', '').replace(')', '').
+                                replace('-', '').replace(':', '').replace(';', '').replace('*', '').split()) > 5 and
+                            len(s.replace('.', '').replace(',', '').replace('(', '').replace(')', '').
+                                replace('-', '').replace(':', '').replace(';', '').replace('*', '').split()) < 120
+                            ]
+
+                keep_ids = sorted(keep_ids)
+
+                # top_sent_indexes = top_sent_indexes[top_sent_indexes]
+                p_src = p_src[keep_ids]
+                p_sent_numbers = p_sent_numbers[keep_ids]
+                # p_sent_tokens_count = p_sent_tokens_count[keep_ids]
+                sent_scores = sent_scores[keep_ids]
+                p_sent_sent_sects_true = p_sent_sent_sects_true[keep_ids]
+                paper_sent_true_labels = paper_sent_true_labels[keep_ids]
+                # sent_true_labels = sent_true_labels[keep_ids]
+
+                # sent_scores = np.asarray([s - 1.00 for s in sent_scores])
+
+                paper_sent_scores.append((sent_scores, p_id, p_src, p_sent_numbers, p_sent_sent_sects_true,
+                                          paper_sent_true_labels, self.bert, "normal"))
+
+
+            # pickle.dump(paper_sent_scores, open(self.args.saved_list_name.replace('.p', '-sent-scores.p'), "wb"))
             # paper_sent_scores = pickle.load(open(self.args.saved_list_name.replace('.p', '-sent-scores.p'),'rb'))
-            # overall_recall1, preds_sent_numbers = self.extract_top_sents(paper_sent_scores)
 
-            # logger.info("Recall-top section stat: %4.4f" % (overall_recall1))
+            overall_recall1, preds_sent_numbers = self.extract_top_sents(paper_sent_scores)
 
-            # self.overall_recalls.append(overall_recall1)
-            # if len(self.overall_recalls) > 0:
-            #     if self.overall_recall < self.overall_recalls[-1]:
-            #         self.overall_recall = self.overall_recalls[-1]
-            #         best_recall_model_saved = True
+            logger.info("Recall-top section stat: %4.4f" % (overall_recall1))
+
+            self.overall_recalls.append(overall_recall1)
+            if len(self.overall_recalls) > 0:
+                if self.overall_recall < self.overall_recalls[-1]:
+                    self.overall_recall = self.overall_recalls[-1]
+                    best_recall_model_saved = True
 
             # new_sents = []
             # for p in paper_sent_scores:
@@ -505,113 +634,19 @@ class Trainer(object):
             #     new_sents.append(p[:-1] + ("section-equal",))
             # overall_recall3, preds_sent_numbers = self.extract_top_sents(new_sents)
             # logger.info("Recall-top section equal: %4.4f" % (overall_recall3))
-            # stats.set_overall_recall(overall_recall1, overall_recall2, overall_recall3)
+            #
+
+            overall_recall2, overall_recall3 = 0, 0
+            stats.set_overall_recall(overall_recall1, overall_recall2, overall_recall3)
 
             # if write_scores_to_pickle:
-            #     pickle.dump(preds_sent_numbers,
-            #                 open(self.args.saved_list_name.replace('.p', '-top-sents.p'), "wb"))
+            pickle.dump(preds_sent_numbers,
+                        open(self.args.saved_list_name.replace('.p', '-top-sents.p'), "wb"))
 
-        # else:
-        #     if write_scores_to_pickle:
-        #         saved_dict = {}
-        #         # source_sent_encodings = {}
-        #         # sent_sect_wise_rg_whole = {}
-        #         for p_id, sent_scores in tqdm(sent_scores_whole.items(), total=len(sent_scores_whole)):
-        #             # source_sent_encodings[p_id] = [0]
-        #             saved_dict[p_id] = (
-        #                 p_id, sent_scores_whole[p_id], paper_srcs[p_id], paper_tgts[p_id], sent_sects_whole_true[p_id],
-        #                 sent_sects_whole_true[p_id], sent_sections_txt_whole[p_id],
-        #                 sent_labels_true[p_id], sent_sect_wise_rg_whole[p_id])
-        #         print('Now saving picke file...')
-        #         pickle.dump(saved_dict, open(self.args.saved_list_name, "wb"))
+            ###############################################################################
 
-        # else  :
-        PRED_LEN = self.args.val_pred_len
-        # LENGTH_LIMIT= 100
-        acum_f_sent_labels = 0
-        acum_p_sent_labels = 0
-        acum_r_sent_labels = 0
-        acc_total = 0
-        for p_idx, (p_id, sent_scores) in enumerate(sent_scores_whole.items()):
-            # sent_true_labels = pickle.load(open("sent_labels_files/pubmedL/val.labels.p", "rb"))
-            # section_textual = np.array(section_textual)
-            paper_sent_true_labels = np.array(sent_labels_true[p_id])
-
-            sent_scores = np.array(sent_scores)
-            p_src = np.array(paper_srcs[p_id])
-
-            # selected_ids_unsorted = np.argsort(-sent_scores, 0)
-            keep_ids = [idx for idx, s in enumerate(p_src) if
-                        len(s.replace('.', '').replace(',', '').replace('(', '').replace(')', '').
-                            replace('-', '').replace(':', '').replace(';', '').replace('*', '').split()) > 5 and
-                        len(s.replace('.', '').replace(',', '').replace('(', '').replace(')', '').
-                            replace('-', '').replace(':', '').replace(';', '').replace('*', '').split()) < 100
-                        ]
-
-            keep_ids = sorted(keep_ids)
-
-            # top_sent_indexes = top_sent_indexes[top_sent_indexes]
-            p_src = p_src[keep_ids]
-            sent_scores = sent_scores[keep_ids]
-            paper_sent_true_labels = paper_sent_true_labels[keep_ids]
-
-            sent_scores = np.asarray([s - 1.00 for s in sent_scores])
-
-            selected_ids_unsorted = np.argsort(-sent_scores, 0)
-
-            _pred = []
-            for j in selected_ids_unsorted:
-                if (j >= len(p_src)):
-                    continue
-                candidate = p_src[j].strip()
-                if True:
-                    # if (not _block_tri(candidate, _pred)):
-                    _pred.append((candidate, j))
-
-                if (len(_pred) == PRED_LEN):
-                    break
-            _pred = sorted(_pred, key=lambda x: x[1])
-            _pred_final_str = '<q>'.join([x[0] for x in _pred])
-
-            preds[p_id] = _pred_final_str
-            golds[p_id] = paper_tgts[p_id]
-            preds_with_idx[p_id] = _pred
-            if p_idx > 10:
-                f, p, r = _get_precision_(paper_sent_true_labels, [p[1] for p in _pred])
-
-            else:
-                f, p, r = _get_precision_(paper_sent_true_labels, [p[1] for p in _pred], print_few=True, p_id=p_id)
-
-            acum_f_sent_labels += f
-            acum_p_sent_labels += p
-            acum_r_sent_labels += r
-
-        for id, pred in preds.items():
-            save_pred.write(pred.strip().replace('<q>', ' ') + '\n')
-            save_gold.write(golds[id].replace('<q>', ' ').strip() + '\n')
-
-        # print(f'Gold: {gold_path}')
-        # print(f'Prediction: {can_path}')
-
-        r1, r2, rl = self._report_rouge(preds.values(), golds.values())
-        stats.set_rl(r1, r2, rl)
-        logger.info("F-score: %4.4f, Prec: %4.4f, Recall: %4.4f" % (
-            acum_f_sent_labels / len(sent_scores_whole), acum_p_sent_labels / len(sent_scores_whole),
-            acum_r_sent_labels / len(sent_scores_whole)))
-
-        stats.set_ir_metrics(acum_f_sent_labels / len(sent_scores_whole),
-                             acum_p_sent_labels / len(sent_scores_whole),
-                             acum_r_sent_labels / len(sent_scores_whole))
-        self.valid_rgls.append((r2 + rl) / 2)
-        self._report_step(0, step,
-                          # self.model.uncertainty_loss._sigmas_sq[0] if self.intro_cls else 0,
-                          # self.model.uncertainty_loss._sigmas_sq[1] if self.intro_cls else 0,
-                          valid_stats=stats)
-
-        if len(self.valid_rgls) > 0:
-            if self.min_rl < self.valid_rgls[-1]:
-                self.min_rl = self.valid_rgls[-1]
-                best_model_saved = True
+            # else:
+            #     if write_scores_to_pickle:
 
         return stats, best_model_saved, best_recall_model_saved
 
@@ -1101,16 +1136,14 @@ def _mult_top_sents(params, idx=None):
     elif type=="normal":
         section_based_train_stat=False
         zip_sents_score = zip(indices, sent_scores)
-        sent_scores = sorted(zip_sents_score, key=lambda element: element[1])
-
+        sent_scores = sorted(zip_sents_score, key=lambda element: element[1], reverse=True)
+        # import pdb;pdb.set_trace()
         sentence_pointer = 0
         _pred = []
 
-
-
         # oracle_real_sent_numbers = p_sent_numbers[oracle_indeces]
 
-        while bert.cal_token_len_prep(_pred) <= 2500:
+        while bert.cal_token_len_prep(_pred) <= 3000:
             try:
                 pred_item = sent_scores[sentence_pointer]
             except:
@@ -1229,7 +1262,13 @@ def _mult_top_sents(params, idx=None):
         _pred = sorted(_pred, key=lambda x: x[1])
 
     # calculate recall for the top retrieved docs...
+
+
     tp = len([1 for x in paper_sampling_sent_indeces if p_sent_true_labels[x] == 1])
-    recall = tp / sum(p_sent_true_labels)
+    if sum(p_sent_true_labels) != 0:
+        recall = (tp) / sum(p_sent_true_labels)
+    else:
+        recall=1
+
     return p_id, sorted(paper_sampling_sent_numbers), recall
 

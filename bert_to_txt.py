@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 paper_src = {}
 paper_tgt = {}
-DATASET='arxivL'
+DATASET='pubmedL'
 for s in ["test"]:
     for file in tqdm(glob.glob(f"/disk1/sajad/datasets/sci/{DATASET}/bert-files/2048-segmented-intro2048-20-introConc/{s}*.pt")):
         instances = torch.load(file)

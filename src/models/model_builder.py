@@ -212,10 +212,6 @@ class BertVanilla(nn.Module):
                 global_mask = torch.zeros(mask_src.shape, dtype=torch.long, device='cuda').unsqueeze(0)
                 global_mask[:, :, [0]] = 1 # <s> or [cls] token
                 global_mask = global_mask.squeeze(0)
-                # import pdb;pdb.set_trace()
-                import pdb;
-                pdb.set_trace()
-
                 top_vec = self.model(x, attention_mask=mask_src.long(), global_attention_mask=global_mask)['last_hidden_state']
 
         else:
@@ -235,7 +231,7 @@ class BertVanilla(nn.Module):
 
 
 class ExtSummarizer(nn.Module):
-    def __init__(self, args, device, checkpoint, intro_cls=True, intro_sents_cls=False, intro_top_cls=False, num_intro_sample=5):
+    def __init__(self, args, device, checkpoint, intro_cls=True, intro_sents_cls=False, intro_top_cls=False, num_intro_sample=8):
         super(ExtSummarizer, self).__init__()
         self.args = args
         self.num_intro_sample = num_intro_sample
