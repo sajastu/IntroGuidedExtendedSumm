@@ -4,29 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5f5aa255-6b0b-4152-a31e-aa948c8038a4" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/generated_predictions.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/sampling_csv.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/anal_last.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/output_intro_to_text.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/IntroGuidedExtendedSumm.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/IntroGuidedExtendedSumm.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bert_to_txt.py" beforeDir="false" afterPath="$PROJECT_DIR$/bert_to_txt.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ext_test.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/ext_test.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/mmr_run.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/mmr_run.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/data_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/data_loader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/model_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/model_builder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/trainer_ext.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/trainer_ext.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pick_mmr.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/pick_mmr.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prep.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/prep.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prepro/data_builder.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/prepro/data_builder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/preprocess.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/preprocess.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/train_extractive.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/train_extractive.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/oracle_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/oracle_utils.py" afterDir="false" />
-    </list>
+    <list default="true" id="5f5aa255-6b0b-4152-a31e-aa948c8038a4" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -163,6 +141,9 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
   <component name="ProjectFrameBounds">
     <option name="y" value="23" />
     <option name="width" value="1440" />
@@ -192,15 +173,15 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "WebServerToolWindowFactoryState": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/utils" />
@@ -365,8 +346,16 @@
       <workItem from="1640105337489" duration="24000" />
       <workItem from="1640127669240" duration="19000" />
       <workItem from="1642258537302" duration="4510000" />
-      <workItem from="1670541945740" duration="6383000" />
+      <workItem from="1670541945740" duration="6608000" />
     </task>
+    <task id="LOCAL-00001" summary="add new files">
+      <created>1670952962703</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1670952962706</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -433,6 +422,10 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="add new files" />
+    <option name="LAST_COMMIT_MESSAGE" value="add new files" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
